@@ -1,0 +1,116 @@
+from __future__ import annotations
+
+import re
+from datetime import date as Date
+from datetime import datetime
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+AE_RE = re.compile(r"^[A-Z0-9 _.-]{1,16}$", re.IGNORECASE)
+HOST_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,253}$")
+
+
+def validate_ae(value: str) -> str:
+    value = value.strip().upper()
+    if not AE_RE.fullmatch(value):
+        raise ValueError("AE Title must contain 1-16 DICOM-safe characters")
+    return value
+
+
+def validate_host(value: str) -> str:
+    value = value.strip()
+    if not HOST_RE.fullmatch(value):
+        raise ValueError("Enter a valid hostname or IP address")
+    return value
+
+
+class Endpoint(BaseModel):
+    host: str
+    port: int = Field(ge=1, le=65535)
+    called_ae: str
+    calling_ae: str = "DCMSIM"
+    target_id: int | None = None
+
+    _host = field_validator("host")(validate_host)
+    _called = field_validator("called_ae")(validate_ae)
+    _calling = field_validator("calling_ae")(validate_ae)
+
+
+class TargetBase(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    host: str
+    mwl_enabled: bool = True
+    mwl_port: int | None = Field(default=104, ge=1, le=65535)
+    mwl_called_ae: str | None = None
+    store_enabled: bool = True
+    store_port: int | None = Field(default=104, ge=1, le=65535)
+    store_called_ae: str | None = None
+    default_calling_ae: str = "DCMSIM"
+
+    _host = field_validator("host")(validate_host)
+    _calling = field_validator("default_calling_ae")(validate_ae)
+
+    @field_validator("mwl_called_ae", "store_called_ae")
+    @classmethod
+    def optional_ae(cls, value: str | None) -> str | None:
+        return validate_ae(value) if value else None
+
+    @model_validator(mode="after")
+    def enabled_services_have_endpoint(self):
+        if self.mwl_enabled and (not self.mwl_port or not self.mwl_called_ae):
+            raise ValueError("Enabled worklist service needs port and Called AE")
+        if self.store_enabled and (not self.store_port or not self.store_called_ae):
+            raise ValueError("Enabled store service needs port and Called AE")
+        return self
+
+
+class TargetCreate(TargetBase):
+    pass
+
+
+class TargetRead(TargetBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class WorklistFilters(BaseModel):
+    date: Date | None = Field(default_factory=Date.today)
+    modality: str | None = Field(default=None, max_length=16)
+    station_ae: str | None = Field(default=None, max_length=16)
+    patient_id: str | None = Field(default=None, max_length=64)
+    accession_number: str | None = Field(default=None, max_length=64)
+    patient_name: str | None = Field(default=None, max_length=64)
+
+
+class WorklistRequest(Endpoint):
+    broad: bool = False
+    filters: WorklistFilters = Field(default_factory=WorklistFilters)
+
+
+SopClassKey = Literal["secondary_capture", "ct", "mr", "ultrasound", "cr", "dx"]
+TransferSyntaxKey = Literal["explicit_vr_little_endian", "implicit_vr_little_endian"]
+
+
+class StoreRequest(Endpoint):
+    sop_class: SopClassKey = "secondary_capture"
+    transfer_syntax: TransferSyntaxKey = "explicit_vr_little_endian"
+
+
+class EchoRequest(Endpoint):
+    pass
+
+
+class TestRunRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    test_type: str
+    target_id: int | None
+    manual_target_json: dict[str, Any] | None
+    started_at: datetime
+    duration_ms: int
+    success: bool
+    status: str
+    result_json: dict[str, Any]

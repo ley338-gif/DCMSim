@@ -1,0 +1,9 @@
+import {test,expect} from '@playwright/test'
+
+test.beforeEach(async({page})=>{await page.route('**/api/targets',route=>route.fulfill({json:[]}));await page.route('**/api/test-runs',route=>route.fulfill({json:[]}))})
+
+test('opens the two primary DICOM workflows',async({page})=>{await page.goto('/');await expect(page.getByRole('heading',{name:'Übersicht'})).toBeVisible();await page.getByRole('link',{name:/Worklist testen/}).click();await expect(page.getByRole('heading',{name:'Worklist testen'})).toBeVisible();await page.getByRole('link',{name:'PACS Store'}).click();await expect(page.getByRole('heading',{name:'PACS Store testen'})).toBeVisible()})
+
+test('worklist zero-result diagnosis offers broad query',async({page})=>{await page.route('**/api/dicom/mwl',route=>route.fulfill({json:{success:true,status:'0x0000',duration_ms:22,count:0,entries:[],active_filters:{station_ae:'CT01'}}}));await page.goto('/worklist');for(const [label,value] of [['Host','127.0.0.1'],['Called AE','MWL'],['Station AE','CT01']])await page.getByLabel(label).fill(value);await page.getByRole('button',{name:'Worklist abfragen'}).click();await expect(page.getByText('Keine Worklist-Einträge gefunden')).toBeVisible();await expect(page.getByRole('button',{name:'Broad Query starten'})).toBeVisible()})
+
+test('store success shows generated UIDs',async({page})=>{await page.route('**/api/dicom/store/generated',route=>route.fulfill({json:{success:true,status:'0x0000',duration_ms:42,study_instance_uid:'1.2.3',series_instance_uid:'1.2.3.4',sop_instance_uid:'1.2.3.4.5',sop_class:'CT Image Storage',transfer_syntax:'Explicit VR Little Endian'}}));await page.goto('/store');await page.getByLabel('Host').fill('127.0.0.1');await page.getByLabel('Called AE').fill('PACS');await page.getByRole('button',{name:'C-STORE senden'}).click();await expect(page.getByText('1.2.3',{exact:true})).toBeVisible();await expect(page.getByText('0x0000',{exact:true}).first()).toBeVisible()})

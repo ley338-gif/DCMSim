@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.db
+data/*
+!data/.gitkeep
+apps/web/node_modules/
+apps/web/dist/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.coverage
+htmlcov/
