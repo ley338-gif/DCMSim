@@ -1,0 +1,14 @@
+services:
+  dcmsim:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - dcmsim-data:/data
+    environment:
+      DCMSIM_DATABASE_URL: sqlite:////data/dcmsim.db
+    restart: unless-stopped
+
+volumes:
+  dcmsim-data:
+
