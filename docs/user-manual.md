@@ -42,7 +42,7 @@ Auf **Eigene DICOM-Datei** wechseln und `.dcm`/`.dicom` wählen. Achtung: Sie ka
 
 ## 10. Historie
 
-Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Ein Eintrag öffnet das damals gespeicherte technische Resultat.
+Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
 
 ## 11. Technische Details anzeigen
 
@@ -52,3 +52,6 @@ Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetai
 
 `DICOM_CONNECTION_FAILED` deutet auf Host, Port oder Netzwerk hin. `DICOM_ASSOCIATION_REJECTED` verlangt Prüfung der AE Titles und Freischaltung. `DICOM_NO_PRESENTATION_CONTEXT` bedeutet, dass SOP Class und Transfer Syntax nicht akzeptiert wurden. Weitere Schritte: [Troubleshooting](troubleshooting.md).
 
+## 13. Einstellungen
+
+Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung vormerken. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.

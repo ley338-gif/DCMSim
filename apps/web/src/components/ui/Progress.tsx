@@ -1,0 +1,4 @@
+import {Check,LoaderCircle} from 'lucide-react'
+export type ProgressStep={label:string;state:'pending'|'active'|'complete'|'error'}
+export function StepProgress({steps}:{steps:ProgressStep[]}){return <div className="step-progress">{steps.map((step,index)=><div className={`step step--${step.state}`} key={step.label}><div className="step__track">{index>0&&<span/>}<b>{step.state==='complete'?<Check size={16}/>:step.state==='active'?<LoaderCircle className="spin" size={16}/>:index+1}</b>{index<steps.length-1&&<span/>}</div><small>{step.label}</small></div>)}</div>}
+export function ProgressBar({value,max=100}:{value:number;max?:number}){return <div className="progress-bar" role="progressbar" aria-valuenow={value} aria-valuemax={max}><span style={{width:`${Math.min(100,value/max*100)}%`}}/></div>}

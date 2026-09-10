@@ -1,0 +1,2 @@
+import {ReactNode} from 'react'
+export function MetricCard({label,value,caption,icon,tone='blue'}:{label:string;value:ReactNode;caption?:ReactNode;icon:ReactNode;tone?:'blue'|'teal'|'green'|'navy'}){return <div className="metric-card"><span className={`metric-card__icon metric-card__icon--${tone}`}>{icon}</span><div><span>{label}</span><strong>{value}</strong>{caption&&<small>{caption}</small>}</div></div>}

@@ -1,0 +1,2 @@
+import {HTMLAttributes,ReactNode} from 'react'
+export function SectionCard({title,subtitle,action,children,className='',...props}:HTMLAttributes<HTMLElement>&{title?:ReactNode;subtitle?:ReactNode;action?:ReactNode}){return <section className={`section-card ${className}`} {...props}>{(title||action)&&<div className="card-header"><div><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div>{action&&<div className="card-header__action">{action}</div>}</div>}{children}</section>}

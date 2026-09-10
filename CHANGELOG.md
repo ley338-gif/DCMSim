@@ -11,8 +11,13 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 - Synthetische Testobjekte für sechs SOP Classes sowie flüchtiger DICOM-Upload.
 - Deterministische Worklist-Nulltreffer-Diagnose und klassifizierte DICOM-Fehler.
 - Docker-Stack, Alembic-Schema, CI sowie Backend-, Frontend- und Browser-Tests.
+- Komponentengetriebenes UI-System mit zentralen Design Tokens, AppShell, DICOM-Domänenkomponenten und interner Showcase-Seite.
+- Einstellungsseite für lokale UI- und DICOM-Standardwerte.
 
 ### Changed
+
+- Übersicht, Worklist, PACS Store, Ziele und Historie an das professionelle On-Prem-Admin-Layout angepasst.
+- PACS-Store-Ablauf um Transferfortschritt, technisches Log und kompaktes Metadatenpanel erweitert.
 
 ### Fixed
 
@@ -27,4 +32,3 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 ### Added
 
 - Erste MVP-Version.
-

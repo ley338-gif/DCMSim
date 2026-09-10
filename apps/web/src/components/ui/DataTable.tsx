@@ -1,0 +1,6 @@
+import {ReactNode} from 'react'
+export type Column<T>={key:string;header:string;render:(row:T)=>ReactNode;className?:string}
+export function DataTable<T>({columns,rows,getKey,onRowClick,empty="Keine Einträge vorhanden."}:{columns:Column<T>[];rows:T[];getKey:(row:T,index:number)=>string|number;onRowClick?:(row:T)=>void;empty?:string}){return <div className="table-scroll"><table className="data-table"><thead><tr>{columns.map(c=><th className={c.className} key={c.key}>{c.header}</th>)}</tr></thead><tbody>{rows.map((row,index)=><tr key={getKey(row,index)} tabIndex={onRowClick?0:undefined} onClick={()=>onRowClick?.(row)} onKeyDown={e=>{if(onRowClick&&(e.key==='Enter'||e.key===' '))onRowClick(row)}}>{columns.map(c=><td className={c.className} key={c.key}>{c.render(row)}</td>)}</tr>)}</tbody></table>{!rows.length&&<EmptyState title={empty}/>}</div>}
+export function EmptyState({title,description}:{title:string;description?:string}){return <div className="empty-state"><strong>{title}</strong>{description&&<span>{description}</span>}</div>}
+export function LoadingState({label='Daten werden geladen …'}:{label?:string}){return <div className="loading-state"><span className="loader"/>{label}</div>}
+export function ErrorState({message}:{message:string}){return <div className="state-box state-box--error"><strong>Fehler</strong><span>{message}</span></div>}

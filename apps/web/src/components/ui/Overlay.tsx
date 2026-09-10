@@ -1,0 +1,4 @@
+import {ReactNode,useEffect} from 'react'
+import {X} from 'lucide-react'
+import {Button} from './Button'
+export function Modal({open,title,children,onClose,size='md'}:{open:boolean;title:string;children:ReactNode;onClose:()=>void;size?:'sm'|'md'|'lg'}){useEffect(()=>{const close=(event:KeyboardEvent)=>event.key==='Escape'&&onClose();window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[onClose]);if(!open)return null;return <div className="modal-backdrop" role="presentation" onMouseDown={e=>e.target===e.currentTarget&&onClose()}><section className={`modal-panel modal-panel--${size}`} role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="modal-header"><h2 id="modal-title">{title}</h2><Button variant="ghost" aria-label="Dialog schließen" onClick={onClose} icon={<X size={20}/>}/></div>{children}</section></div>}
