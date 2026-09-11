@@ -5,8 +5,10 @@ from app.dicom.datasets import (
     MODALITIES,
     SOP_CLASSES,
     build_mwl_query,
+    build_study_query,
     dataset_summary,
     generate_test_dataset,
+    parse_study_result,
     parse_worklist_result,
 )
 from pydicom.uid import ExplicitVRLittleEndian
@@ -72,3 +74,23 @@ def test_worklist_parser_reads_scheduled_sequence():
     assert row["patient_id"] == "DCMSIM-TEST-0001"
     assert row["modality"] == "MR"
     assert any(item["name"] == "Scheduled Procedure Step Sequence" for item in row["dataset"])
+
+
+def test_study_query_builder_and_parser():
+    query = build_study_query(
+        {"study_date": date(2026, 9, 11), "modality": "ct", "patient_id": "DCMSIM-1"}
+    )
+    assert query.QueryRetrieveLevel == "STUDY"
+    assert query.StudyDate == "20260911"
+    assert query.ModalitiesInStudy == "CT"
+    assert query.PatientID == "DCMSIM-1"
+
+    query.StudyInstanceUID = "1.2.826.0.1"
+    query.StudyDescription = "SYNTHETIC STUDY"
+    query.NumberOfStudyRelatedSeries = "2"
+    query.NumberOfStudyRelatedInstances = "42"
+    row = parse_study_result(query)
+    assert row["study_instance_uid"] == "1.2.826.0.1"
+    assert row["series_count"] == 2
+    assert row["instance_count"] == 42
+    assert row["dataset"]

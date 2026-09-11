@@ -8,7 +8,10 @@ from pathlib import Path
 
 from pydicom import Dataset
 from pynetdicom import AE, evt
-from pynetdicom.sop_class import ModalityWorklistInformationFind
+from pynetdicom.sop_class import (
+    ModalityWorklistInformationFind,
+    StudyRootQueryRetrieveInformationModelFind,
+)
 
 API_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(API_ROOT))
@@ -41,6 +44,23 @@ def handle_find(_event):
     yield 0x0000, None
 
 
+def handle_study_find(_event):
+    dataset = Dataset()
+    dataset.QueryRetrieveLevel = "STUDY"
+    dataset.PatientName = "DCMSIM^FULLSTACK"
+    dataset.PatientID = "DCMSIM-QR-001"
+    dataset.StudyDate = "20260911"
+    dataset.StudyTime = "120000"
+    dataset.AccessionNumber = "DCMSIM-QR-ACC"
+    dataset.StudyDescription = "FULL STACK PACS QUERY"
+    dataset.StudyInstanceUID = "1.2.826.0.1.3680043.10.543.300"
+    dataset.ModalitiesInStudy = "CT"
+    dataset.NumberOfStudyRelatedSeries = "2"
+    dataset.NumberOfStudyRelatedInstances = "25"
+    yield 0xFF00, dataset
+    yield 0x0000, None
+
+
 def handle_store(event):
     dataset = event.dataset
     if not str(dataset.PatientID).startswith("DCMSIM-"):
@@ -65,7 +85,14 @@ def start_servers():
         block=False,
         evt_handlers=[(evt.EVT_C_STORE, handle_store)],
     )
-    return mwl_server, store_server
+    qr_ae = AE(ae_title="TESTQR")
+    qr_ae.add_supported_context(StudyRootQueryRetrieveInformationModelFind)
+    qr_server = qr_ae.start_server(
+        ("127.0.0.1", 11114),
+        block=False,
+        evt_handlers=[(evt.EVT_C_FIND, handle_study_find)],
+    )
+    return mwl_server, store_server, qr_server
 
 
 if __name__ == "__main__":

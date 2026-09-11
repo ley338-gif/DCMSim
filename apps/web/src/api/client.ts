@@ -1,8 +1,10 @@
-export type Target={id:number;name:string;host:string;mwl_enabled:boolean;mwl_port:number|null;mwl_called_ae:string|null;store_enabled:boolean;store_port:number|null;store_called_ae:string|null;default_calling_ae:string;created_at:string;updated_at:string}
+export type Target={id:number;name:string;host:string;mwl_enabled:boolean;mwl_port:number|null;mwl_called_ae:string|null;store_enabled:boolean;store_port:number|null;store_called_ae:string|null;qr_enabled?:boolean;qr_port?:number|null;qr_called_ae?:string|null;default_calling_ae:string;created_at:string;updated_at:string}
 export type Endpoint={host:string;port:number;called_ae:string;calling_ae:string;target_id?:number|null}
 export type DicomElement={tag:string;name:string;vr:string;value:string|DicomElement[][]}
 export type WorklistEntry={patient_name:string;patient_id:string;birth_date:string;accession_number:string;modality:string;station_ae:string;start_date:string;start_time:string;sps_description:string;requested_procedure_description:string;dataset:DicomElement[]}
+export type StudyEntry={patient_name:string;patient_id:string;accession_number:string;study_date:string;study_time:string;study_description:string;study_instance_uid:string;modalities:string;series_count:number;instance_count:number;dataset:DicomElement[]}
 export type Result={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:WorklistEntry[];active_filters?:Record<string,string>;[key:string]:unknown}
+export type StudyQueryResult={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:StudyEntry[];active_filters?:Record<string,string>;run_id?:number}
 export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;started_at:string;duration_ms:number;success:boolean;status:string;result_json:Result}
 export type ModalityProfile={id:number;name:string;description:string|null;modality:'CT'|'MR'|'US'|'CR'|'DX'|'OT'|'XA'|'MG'|'NM'|'PT';calling_ae:string;mwl_enabled:boolean;mwl_target_id:number|null;store_enabled:boolean;store_target_id:number|null;created_at:string;updated_at:string}
 export type ModalityProfileDraft=Omit<ModalityProfile,'id'|'created_at'|'updated_at'>
@@ -26,6 +28,7 @@ export const api={
   checkModalityProfile:(id:number,transfer_syntax='explicit_vr_little_endian',signal?:AbortSignal)=>request<ModalityCheckResult>(`/modality-profiles/${id}/check`,{method:'POST',body:JSON.stringify({transfer_syntax}),signal}),
   echo:(endpoint:Endpoint)=>request<Result>('/dicom/echo',{method:'POST',body:JSON.stringify(endpoint)}),
   mwl:(payload:Endpoint&{broad:boolean;filters:Record<string,string|null>})=>request<Result>('/dicom/mwl',{method:'POST',body:JSON.stringify(payload)}),
+  studies:(payload:Endpoint&{filters:Record<string,string|null>})=>request<StudyQueryResult>('/dicom/studies',{method:'POST',body:JSON.stringify(payload)}),
   store:(payload:Endpoint&{sop_class:string;transfer_syntax:string})=>request<Result>('/dicom/store/generated',{method:'POST',body:JSON.stringify(payload)}),
   analyzeUpload:(data:FormData)=>request<Record<string,string>>('/dicom/store/analyze',{method:'POST',body:data}),
   storeUpload:(data:FormData)=>request<Result>('/dicom/store/upload',{method:'POST',body:data}),

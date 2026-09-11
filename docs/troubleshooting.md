@@ -24,6 +24,10 @@ Station AE ist häufig modalitätsspezifisch. Ohne diesen Filter erneut testen. 
 
 Prüfen, ob die gewählte SOP Class am PACS freigegeben ist. Danach zwischen Explicit und Implicit VR Little Endian wechseln. „No Acceptable Presentation Context“ ist eine Aushandlungsablehnung vor C-STORE, kein Bildfehler.
 
+## PACS-Suche liefert keine Studien
+
+Zuerst Studiendatum und Zeitzone prüfen, danach Patient ID oder Accession Number verwenden. Der Query/Retrieve-Dienst kann einen anderen Port und Called AE als Storage besitzen. Ein erfolgreicher C-ECHO bestätigt nicht automatisch die Freigabe des Study Root C-FIND Presentation Contexts. Leere Treffer bei Status `0x0000` sind eine erfolgreiche Abfrage ohne passende Studien.
+
 ## Worklist funktioniert, Store nicht
 
 Das MWL-Ziel ist erreichbar und akzeptiert C-FIND; daraus folgt nicht, dass der Storage-Dienst dieselbe Freischaltung besitzt. Store Called AE und Port, Freigabe der Calling AE und Quell-IP sowie akzeptierte SOP Class und Transfer Syntax am PACS prüfen.

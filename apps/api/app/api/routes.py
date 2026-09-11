@@ -18,12 +18,13 @@ from app.dicom.datasets import (
     SOP_LABELS,
     TRANSFER_LABELS,
     build_mwl_query,
+    build_study_query,
     dataset_summary,
     generate_test_dataset,
     read_uploaded_dataset,
 )
 from app.dicom.errors import DicomError
-from app.dicom.network import echo, find_worklist, store_dataset
+from app.dicom.network import echo, find_studies, find_worklist, store_dataset
 from app.models import ModalityProfile, Target, TestRun
 from app.schemas.common import (
     ConfigurationImport,
@@ -34,6 +35,7 @@ from app.schemas.common import (
     ModalityProfileCreate,
     ModalityProfileRead,
     StoreRequest,
+    StudyQueryRequest,
     TargetCreate,
     TargetRead,
     TestRunRead,
@@ -70,7 +72,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.2.1"}
+    return {"status": "ok", "version": "0.3.0"}
 
 
 @router.get("/configuration/export")
@@ -269,6 +271,27 @@ def dicom_mwl(payload: WorklistRequest, db: Session = Depends(get_db)):
         result = error_result(exc, started)
     result["target_name"] = endpoint_name(db, endpoint)
     run = record_run(db, "mwl_find", endpoint, result)
+    return {**result, "run_id": run.id}
+
+
+@router.post("/dicom/studies")
+def dicom_studies(payload: StudyQueryRequest, db: Session = Depends(get_db)):
+    endpoint, started = payload.model_dump(), monotonic()
+    query = build_study_query(payload.filters.model_dump())
+    try:
+        result = find_studies(endpoint, query)
+        result["active_filters"] = {
+            key: str(value) for key, value in payload.filters.model_dump().items() if value
+        }
+    except DicomError as exc:
+        result = error_result(exc, started)
+    result["target_name"] = endpoint_name(db, endpoint)
+    history_result = {
+        key: value
+        for key, value in result.items()
+        if key not in {"entries", "active_filters"}
+    }
+    run = record_run(db, "qr_find", endpoint, history_result)
     return {**result, "run_id": run.id}
 
 

@@ -8,6 +8,20 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.0] - 2026-09-11
+
+### Added
+
+- PACS-Studienabfrage per Study Root Query/Retrieve Information Model C-FIND.
+- Separate Query/Retrieve-Endpunkte an gespeicherten Zielen.
+- Tabellen- und DICOM-Detailansicht für Studienantworten sowie Historientyp `qr_find`.
+- Reale Localhost-DICOM-Integration und Browsertests für die PACS-Suche.
+
+### Changed
+
+- Produktversion auf 0.3.0 angehoben.
+- Studienabfragen verlangen mindestens ein Suchkriterium; Patientenresultate und patientenbezogene Filter werden nicht in der Historie persistiert.
+
 ## [0.2.1] - 2026-09-11
 
 ### Added

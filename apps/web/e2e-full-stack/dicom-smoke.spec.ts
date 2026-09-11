@@ -4,6 +4,8 @@ test('real worklist query reaches the local MWL SCP',async({page})=>{await page.
 
 test('real CT store reaches the local Storage SCP and returns generated UIDs',async({page})=>{await page.goto('/pacs-store');await page.getByLabel('Host').fill('127.0.0.1');await page.getByLabel('Port').fill('11113');await page.getByLabel('Called AE').fill('TESTPACS');await page.getByLabel('SOP Class').selectOption('ct');await page.getByRole('button',{name:'C-STORE senden'}).click();await expect(page.getByText('C-STORE erfolgreich')).toBeVisible();await expect(page.getByText('0x0000',{exact:true}).first()).toBeVisible();for(const label of ['Study Instance UID','Series Instance UID','SOP Instance UID'])await expect(page.getByText(label,{exact:true})).toBeVisible()})
 
+test('real PACS query reaches the local Study Root SCP',async({page})=>{await page.goto('/pacs-query');await page.getByLabel('Host').fill('127.0.0.1');await page.getByLabel('Port').fill('11114');await page.getByLabel('Called AE').fill('TESTQR');await page.getByRole('button',{name:'Studien suchen'}).click();await expect(page.getByText('FULL STACK PACS QUERY')).toBeVisible();await expect(page.getByText('DCMSIM-QR-001')).toBeVisible();await page.getByText('FULL STACK PACS QUERY').click();await expect(page.getByRole('dialog',{name:'DICOM-Studienantwort'})).toContainText('1.2.826.0.1.3680043.10.543.300')})
+
 test('real modality check covers the complete 0.2 workflow and history',async({page})=>{
   await page.goto('/targets')
   await page.getByRole('button',{name:'Neues Ziel'}).click()

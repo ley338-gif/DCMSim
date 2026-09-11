@@ -9,12 +9,13 @@ DCMSim prüft aus Sicht einer Modalität, ob ein Worklist- oder PACS-Endpunkt er
 - **Calling AE** ist der Name, mit dem DCMSim auftritt; **Called AE** ist der konfigurierte Name der Gegenstelle.
 - **MWL SCU** (DCMSim) fragt per **C-FIND** einen **MWL SCP** (RIS/PACS) ab.
 - **Storage SCU** (DCMSim) sendet per C-STORE an einen **Storage SCP** (PACS).
+- **Query/Retrieve SCU** sucht per Study Root C-FIND nach Studien. Es ruft keine Bilder ab.
 - Eine **SOP Class** bezeichnet den DICOM-Objekttyp. Eine **Transfer Syntax** bestimmt seine Kodierung. Beide werden im **Presentation Context** ausgehandelt.
 - **Study UID**, **Series UID** und **SOP UID** identifizieren Untersuchung, Serie und einzelnes Objekt weltweit eindeutig.
 
 ## 3. Ziele verwalten
 
-Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Port, Called AE und Default Calling AE setzen. Gespeicherte Ziele erscheinen in den Testformularen; manuelle Eingabe bleibt immer möglich.
+Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Port, Called AE und Default Calling AE setzen. Worklist, Store und PACS-Suche können unterschiedliche Ports oder Called AEs verwenden. Gespeicherte Ziele erscheinen in den Testformularen; manuelle Eingabe bleibt immer möglich.
 
 ## 4. Worklist testen
 
@@ -56,21 +57,27 @@ Der Store-Check erzeugt ein synthetisches Objekt. CT, MR, US, CR und DX verwende
 
 Während des Checks kann die Browseranzeige abgebrochen werden. Der bereits gestartete DICOM-Vorgang kann serverseitig noch regulär enden und in der Historie erscheinen. **Erneut prüfen** wiederholt den letzten Check mit demselben Profil. Fehlerresultate enthalten einen empfohlenen nächsten Diagnoseschritt.
 
-## 12. Historie
+## 12. PACS-Studien suchen
+
+Unter **PACS-Suche** einen Query/Retrieve-Endpunkt auswählen und mindestens ein Kriterium verwenden. Das heutige Studiendatum ist sicher vorbelegt; alternativ sind Patientenname, Patient ID, Accession Number und Modalität möglich. **Studien suchen** führt Study Root C-FIND auf Level `STUDY` aus. Ein Klick auf eine Zeile öffnet die vollständige DICOM-Antwort. DCMSim führt dabei weder C-MOVE noch C-GET aus.
+
+Patienten- und Studiendaten werden nur in der aktuellen Antwort angezeigt. Die Historie speichert für diesen Test lediglich technischen Status, Dauer und Trefferzahl.
+
+## 13. Historie
 
 Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
 
 Der Typ **Modalitätsprüfung** speichert Profilname und beide Subresultate in einem gemeinsamen Lauf. Worklist-Ergebnislisten mit Patientendaten werden dabei nicht in diesen kombinierten Historieneintrag kopiert.
 
-## 13. Technische Details anzeigen
+## 14. Technische Details anzeigen
 
 Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetails. Monospace-Felder sind direkt für den Abgleich mit PACS/RIS-Konfigurationen gedacht.
 
-## 14. Häufige Fehler
+## 15. Häufige Fehler
 
 `TCP_CONNECTION_FAILED` deutet auf Host, Port oder Netzwerk hin. `DICOM_ASSOCIATION_REJECTED` verlangt Prüfung der AE Titles und Freischaltung. `DICOM_ASSOCIATION_ABORTED` bezeichnet einen Abbruch der Association. `DICOM_TIMEOUT` bedeutet, dass innerhalb der Frist keine finale Antwort kam. `DICOM_NO_PRESENTATION_CONTEXT` bedeutet, dass SOP Class und Transfer Syntax nicht akzeptiert wurden. Weitere Schritte: [Troubleshooting](troubleshooting.md).
 
-## 15. Einstellungen
+## 16. Einstellungen
 
 Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung vormerken. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.
 

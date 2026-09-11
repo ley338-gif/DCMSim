@@ -1,8 +1,8 @@
 # DCMSim
 
-DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es simuliert eine Modalität und prüft Modality Worklist (C-FIND), PACS Storage (C-STORE) und Connectivity (C-ECHO). Technische Antworten, ausgehandelte DICOM-Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
+DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.2.1
+## Funktionen in 0.3.0
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -16,6 +16,8 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - direkte Wiederholung und abbrechbare Browseranzeige für Modalitätschecks
 - konkrete nächste Schritte zu klassifizierten DICOM-Fehlern
 - JSON-Konfigurationsexport/-import, konsistentes SQLite-Backup und manuelle History-Retention
+- sichere PACS-Studienabfrage per Study Root C-FIND mit DICOM-Detailansicht
+- eigene Query/Retrieve-Konfiguration je Ziel; Patientenergebnisse werden nicht in der Historie gespeichert
 
 ## Start mit Docker
 
@@ -44,6 +46,6 @@ npm run dev
 
 Konfiguration erfolgt über die Variablen aus `.env.example`. Backend-Tests: `pytest`; Backend-Lint: `ruff check apps/api`; Frontend-Prüfung: `npm run lint && npm run typecheck && npm test -- --run && npm run build`. Der Standard-Datenpfad im Container ist `/data/dcmsim.db`.
 
-Unterstützt werden C-ECHO SCU, MWL C-FIND SCU und C-STORE SCU. Für den schnellsten Systemcheck zuerst unter **Ziele** ein System und anschließend unter **Modalitäten** ein Geräteprofil anlegen. Details stehen in der [DICOM Support Matrix](docs/dicom-support.md). Bedienung: [User Manual](docs/user-manual.md). Fehleranalyse: [Troubleshooting](docs/troubleshooting.md).
+Unterstützt werden C-ECHO SCU, MWL C-FIND SCU, Study Root C-FIND SCU und C-STORE SCU. Für den schnellsten Systemcheck zuerst unter **Ziele** ein System anlegen. Details stehen in der [DICOM Support Matrix](docs/dicom-support.md). Bedienung: [User Manual](docs/user-manual.md). Fehleranalyse: [Troubleshooting](docs/troubleshooting.md).
 
 > DCMSim hat im MVP keine Authentifizierung und ist ausschließlich für vertrauenswürdige interne Netze gedacht. Uploads können Patientendaten enthalten und werden nicht dauerhaft gespeichert. Es gibt keine Telemetrie oder Cloud-Kommunikation.
