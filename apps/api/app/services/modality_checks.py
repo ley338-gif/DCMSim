@@ -14,6 +14,7 @@ from app.dicom.datasets import (
 from app.dicom.errors import DicomError
 from app.dicom.network import find_worklist, store_dataset
 from app.models import ModalityProfile, Target
+from app.services.diagnostics import recommendation_for
 from app.services.history import record_run
 
 MODALITY_SOP_CLASS = {
@@ -43,6 +44,7 @@ def _failure(exc: DicomError, started: float) -> dict[str, Any]:
         "details": exc.details,
         "duration_ms": round((monotonic() - started) * 1000),
         "association": bool(exc.details.get("association", False)),
+        "recommendation": recommendation_for(exc.code),
     }
 
 
@@ -53,6 +55,7 @@ def _missing_target(service: str) -> dict[str, Any]:
         "message": f"No {service} target is configured for this modality profile",
         "duration_ms": 0,
         "association": False,
+        "recommendation": recommendation_for("MODALITY_TARGET_MISSING"),
     }
 
 
@@ -125,6 +128,8 @@ def _store_check(profile: ModalityProfile, transfer_syntax: str) -> dict[str, An
         result = store_dataset(endpoint, dataset)
     except DicomError as exc:
         result = _failure(exc, started)
+    if result.get("code") and not result.get("recommendation"):
+        result["recommendation"] = recommendation_for(result["code"])
     result.update(summary)
     result.update(
         {

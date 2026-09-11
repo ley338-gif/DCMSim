@@ -1,12 +1,16 @@
+import os
+from datetime import datetime
 from pathlib import Path
 from time import monotonic
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import ValidationError
 from pydicom.errors import InvalidDicomError
 from sqlalchemy import desc, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from starlette.background import BackgroundTask
 
 from app.core.config import settings
 from app.db.session import get_db
@@ -22,8 +26,10 @@ from app.dicom.errors import DicomError
 from app.dicom.network import echo, find_worklist, store_dataset
 from app.models import ModalityProfile, Target, TestRun
 from app.schemas.common import (
+    ConfigurationImport,
     EchoRequest,
     Endpoint,
+    HistoryRetentionRequest,
     ModalityCheckRequest,
     ModalityProfileCreate,
     ModalityProfileRead,
@@ -33,10 +39,22 @@ from app.schemas.common import (
     TestRunRead,
     WorklistRequest,
 )
+from app.services.diagnostics import recommendation_for
 from app.services.history import record_run
 from app.services.modality_checks import run_modality_check
+from app.services.operations import (
+    create_sqlite_backup,
+    export_configuration,
+    import_configuration,
+    purge_history,
+)
 
 router = APIRouter(prefix="/api")
+
+
+def endpoint_name(db: Session, endpoint: dict) -> str:
+    target = db.get(Target, endpoint.get("target_id")) if endpoint.get("target_id") else None
+    return target.name if target else "Manuelles Ziel"
 
 
 def error_result(exc: DicomError, started: float) -> dict:
@@ -45,13 +63,41 @@ def error_result(exc: DicomError, started: float) -> dict:
         "code": exc.code,
         "message": exc.message,
         "details": exc.details,
+        "recommendation": recommendation_for(exc.code),
         "duration_ms": round((monotonic() - started) * 1000),
     }
 
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.2.0"}
+    return {"status": "ok", "version": "0.2.1"}
+
+
+@router.get("/configuration/export")
+def configuration_export(db: Session = Depends(get_db)):
+    return export_configuration(db)
+
+
+@router.post("/configuration/import")
+def configuration_import(payload: ConfigurationImport, db: Session = Depends(get_db)):
+    return import_configuration(db, payload)
+
+
+@router.post("/maintenance/history-retention")
+def history_retention(payload: HistoryRetentionRequest, db: Session = Depends(get_db)):
+    return purge_history(db, payload.days)
+
+
+@router.get("/maintenance/database-backup")
+def database_backup(db: Session = Depends(get_db)):
+    path = create_sqlite_backup(db)
+    filename = f"dcmsim-backup-{datetime.now():%Y%m%d-%H%M%S}.sqlite3"
+    return FileResponse(
+        path,
+        filename=filename,
+        media_type="application/vnd.sqlite3",
+        background=BackgroundTask(os.unlink, path),
+    )
 
 
 @router.get("/targets", response_model=list[TargetRead])
@@ -202,6 +248,7 @@ def dicom_echo(payload: EchoRequest, db: Session = Depends(get_db)):
         result = echo(endpoint)
     except DicomError as exc:
         result = error_result(exc, started)
+    result["target_name"] = endpoint_name(db, endpoint)
     run = record_run(db, "dicom_echo", endpoint, result)
     return {**result, "run_id": run.id}
 
@@ -220,6 +267,7 @@ def dicom_mwl(payload: WorklistRequest, db: Session = Depends(get_db)):
         result["broad"] = payload.broad
     except DicomError as exc:
         result = error_result(exc, started)
+    result["target_name"] = endpoint_name(db, endpoint)
     run = record_run(db, "mwl_find", endpoint, result)
     return {**result, "run_id": run.id}
 
@@ -233,6 +281,8 @@ def dicom_store_generated(payload: StoreRequest, db: Session = Depends(get_db)):
         result = store_dataset(endpoint, ds)
     except DicomError as exc:
         result = error_result(exc, started)
+    if result.get("code") and not result.get("recommendation"):
+        result["recommendation"] = recommendation_for(result["code"])
     result.update(summary)
     result.update(
         {
@@ -241,6 +291,7 @@ def dicom_store_generated(payload: StoreRequest, db: Session = Depends(get_db)):
             "calling_ae": payload.calling_ae,
             "called_ae": payload.called_ae,
             "target": f"{payload.host}:{payload.port}",
+            "target_name": endpoint_name(db, endpoint),
         }
     )
     run = record_run(db, "dicom_store", endpoint, result)
@@ -291,8 +342,10 @@ async def dicom_store_upload(
         result = store_dataset(endpoint, ds)
     except DicomError as exc:
         result = error_result(exc, started)
+    if result.get("code") and not result.get("recommendation"):
+        result["recommendation"] = recommendation_for(result["code"])
     result.update(summary)
-    result.update({"calling_ae": calling_ae, "called_ae": called_ae, "target": f"{host}:{port}"})
+    result.update({"calling_ae": calling_ae, "called_ae": called_ae, "target": f"{host}:{port}", "target_name": endpoint_name(db, endpoint)})
     run = record_run(db, "dicom_store", endpoint, result)
     return {**result, "run_id": run.id}
 

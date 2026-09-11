@@ -1,5 +1,7 @@
 # Troubleshooting
 
+Fehlerresultate zeigen ab Version 0.2.1 neben dem stabilen technischen Code einen konkreten nächsten Prüfschritt. Diese Empfehlung grenzt die Ursache ein, ersetzt aber nicht das Log der Gegenstelle.
+
 ## Worklist liefert 0 Treffer
 
 1. Broad Query ausführen.
@@ -49,3 +51,7 @@ Firewall, Routing, falschen Port und Antwortzeit der Gegenstelle prüfen. DCMSim
 ## PACS erreichbar, Bild aber nicht auffindbar
 
 Study-, Series- und SOP-UID aus dem Testergebnis kopieren und im PACS-Log suchen. Patient ID beginnt mit `DCMSIM-`; Study Description ist `PACS STORE TEST`. Importregeln, Quarantäne und Modalitätsfilter des PACS prüfen.
+
+## Profil meldet „Ziel fehlt“
+
+Das referenzierte Ziel wurde gelöscht oder ein aktiver Dienst hat noch kein Ziel. Das Profil bleibt absichtlich erhalten. Unter **Modalitäten → Bearbeiten** für jeden aktiven Dienst ein geeignetes Ziel neu auswählen.

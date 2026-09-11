@@ -26,4 +26,4 @@ Lokale Test-SCPs werden in den DICOM-Integrationstests mit pynetdicom auf dynami
 
 ## Release-Prozess
 
-Version und Changelog aktualisieren; Backend-, Frontend-, E2E-, Migration- und Docker-Prüfungen ausführen; DICOM Support Matrix und User Manual abgleichen; anschließend Tag gemäß Semantic Versioning erstellen.
+Version und Changelog aktualisieren; Backend-, Frontend-, E2E-, Migration- und Docker-Prüfungen ausführen; DICOM Support Matrix und User Manual abgleichen; anschließend Tag gemäß Semantic Versioning erstellen. Vor einem Upgrade empfiehlt sich ein SQLite-Backup über **Einstellungen → Datensicherung**.

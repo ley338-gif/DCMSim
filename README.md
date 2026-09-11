@@ -2,7 +2,7 @@
 
 DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es simuliert eine Modalität und prüft Modality Worklist (C-FIND), PACS Storage (C-STORE) und Connectivity (C-ECHO). Technische Antworten, ausgehandelte DICOM-Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.2.0
+## Funktionen in 0.2.1
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -13,6 +13,9 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - manueller kombinierter Modalitätscheck mit Worklist-, Store- und Gesamtergebnis
 - diagnostische MWL-Wiederholung ohne Station AE bei null Treffern
 - synthetische, SOP-spezifische Testobjekte für SC, CT, MR, US, CR und DX
+- direkte Wiederholung und abbrechbare Browseranzeige für Modalitätschecks
+- konkrete nächste Schritte zu klassifizierten DICOM-Fehlern
+- JSON-Konfigurationsexport/-import, konsistentes SQLite-Backup und manuelle History-Retention
 
 ## Start mit Docker
 

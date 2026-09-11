@@ -54,6 +54,8 @@ Der Store-Check erzeugt ein synthetisches Objekt. CT, MR, US, CR und DX verwende
 
 **PASS** bedeutet, dass alle aktivierten Subchecks erfolgreich waren. Schlägt Worklist oder Store fehl, lautet das Gesamtergebnis **FAIL**, während der erfolgreiche Teil weiterhin separat sichtbar bleibt. So ist beispielsweise „Worklist funktioniert, Store nicht“ direkt erkennbar. Unter **Technische Details** stehen Statuscodes, Schritte, SOP Class, Transfer Syntax und die diagnostische Wiederholung.
 
+Während des Checks kann die Browseranzeige abgebrochen werden. Der bereits gestartete DICOM-Vorgang kann serverseitig noch regulär enden und in der Historie erscheinen. **Erneut prüfen** wiederholt den letzten Check mit demselben Profil. Fehlerresultate enthalten einen empfohlenen nächsten Diagnoseschritt.
+
 ## 12. Historie
 
 Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
@@ -71,3 +73,5 @@ Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetai
 ## 15. Einstellungen
 
 Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung vormerken. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.
+
+Unter **Datensicherung** kann die Konfiguration als JSON exportiert und wieder importiert werden. Der Import aktualisiert Einträge gleichen Namens oder legt neue an; nicht enthaltene Daten werden nicht gelöscht. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.
