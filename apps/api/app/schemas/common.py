@@ -46,12 +46,15 @@ class TargetBase(BaseModel):
     store_enabled: bool = True
     store_port: int | None = Field(default=104, ge=1, le=65535)
     store_called_ae: str | None = None
+    qr_enabled: bool = False
+    qr_port: int | None = Field(default=104, ge=1, le=65535)
+    qr_called_ae: str | None = None
     default_calling_ae: str = "DCMSIM"
 
     _host = field_validator("host")(validate_host)
     _calling = field_validator("default_calling_ae")(validate_ae)
 
-    @field_validator("mwl_called_ae", "store_called_ae")
+    @field_validator("mwl_called_ae", "store_called_ae", "qr_called_ae")
     @classmethod
     def optional_ae(cls, value: str | None) -> str | None:
         return validate_ae(value) if value else None
@@ -62,6 +65,8 @@ class TargetBase(BaseModel):
             raise ValueError("Enabled worklist service needs port and Called AE")
         if self.store_enabled and (not self.store_port or not self.store_called_ae):
             raise ValueError("Enabled store service needs port and Called AE")
+        if self.qr_enabled and (not self.qr_port or not self.qr_called_ae):
+            raise ValueError("Enabled query/retrieve service needs port and Called AE")
         return self
 
 
@@ -156,6 +161,24 @@ class WorklistFilters(BaseModel):
 class WorklistRequest(Endpoint):
     broad: bool = False
     filters: WorklistFilters = Field(default_factory=WorklistFilters)
+
+
+class StudyQueryFilters(BaseModel):
+    patient_name: str | None = Field(default=None, max_length=64)
+    patient_id: str | None = Field(default=None, max_length=64)
+    accession_number: str | None = Field(default=None, max_length=64)
+    study_date: Date | None = None
+    modality: str | None = Field(default=None, max_length=16)
+
+    @model_validator(mode="after")
+    def require_safe_filter(self):
+        if not any((self.patient_name, self.patient_id, self.accession_number, self.study_date, self.modality)):
+            raise ValueError("At least one study query filter is required")
+        return self
+
+
+class StudyQueryRequest(Endpoint):
+    filters: StudyQueryFilters = Field(default_factory=StudyQueryFilters)
 
 
 SopClassKey = Literal["secondary_capture", "ct", "mr", "ultrasound", "cr", "dx"]

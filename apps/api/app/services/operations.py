@@ -22,7 +22,8 @@ def export_configuration(db: Session) -> dict:
                 key: getattr(target, key)
                 for key in (
                     "name", "host", "mwl_enabled", "mwl_port", "mwl_called_ae",
-                    "store_enabled", "store_port", "store_called_ae", "default_calling_ae",
+                    "store_enabled", "store_port", "store_called_ae",
+                    "qr_enabled", "qr_port", "qr_called_ae", "default_calling_ae",
                 )
             }
             for target in targets

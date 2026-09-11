@@ -23,6 +23,9 @@ class Target(Base):
     store_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     store_port: Mapped[int | None] = mapped_column(Integer)
     store_called_ae: Mapped[str | None] = mapped_column(String(16))
+    qr_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    qr_port: Mapped[int | None] = mapped_column(Integer)
+    qr_called_ae: Mapped[str | None] = mapped_column(String(16))
     default_calling_ae: Mapped[str] = mapped_column(String(16), default="DCMSIM")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(

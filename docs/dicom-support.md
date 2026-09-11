@@ -6,6 +6,7 @@
 |---|---|
 | C-ECHO SCU | Supported |
 | MWL C-FIND SCU | Supported |
+| Study Root C-FIND SCU (STUDY) | Supported |
 | C-STORE SCU | Supported |
 | C-MOVE / C-GET | Not supported |
 | Storage Commitment | Not supported |
@@ -26,7 +27,7 @@
 
 Explicit VR Little Endian und Implicit VR Little Endian werden für synthetische Objekte unterstützt. Bei Uploads wird die in der Datei deklarierte Transfer Syntax angefordert. Komprimierte Uploads können gesendet werden, wenn pydicom sie lesen kann und der SCP den Context akzeptiert; DCMSim transkodiert nicht.
 
-MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Accession Number und Patient Name sowie eine Broad Query. Query/Retrieve, HL7 und produktive SCP-Dienste gehören nicht zum MVP.
+MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Accession Number und Patient Name sowie eine Broad Query. Die PACS-Suche unterstützt Study Root C-FIND auf Studienebene mit Studiendatum, Modalität, Patient ID, Accession Number und Patient Name. Abrufdienste, HL7 und produktive SCP-Dienste sind nicht unterstützt.
 
 ## Modalitätscheck
 

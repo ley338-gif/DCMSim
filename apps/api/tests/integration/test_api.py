@@ -23,12 +23,17 @@ def test_target_crud_and_history(tmp_path):
             "store_enabled": True,
             "store_port": 11113,
             "store_called_ae": "PACS",
+            "qr_enabled": True,
+            "qr_port": 11114,
+            "qr_called_ae": "PACSQR",
             "default_calling_ae": "DCMSIM",
         }
         created = client.post("/api/targets", json=payload)
         assert created.status_code == 201
         target_id = created.json()["id"]
-        assert client.get(f"/api/targets/{target_id}").json()["name"] == "Test PACS"
+        stored = client.get(f"/api/targets/{target_id}").json()
+        assert stored["name"] == "Test PACS"
+        assert stored["qr_called_ae"] == "PACSQR"
         payload["name"] = "Updated PACS"
         assert (
             client.put(f"/api/targets/{target_id}", json=payload).json()["name"] == "Updated PACS"

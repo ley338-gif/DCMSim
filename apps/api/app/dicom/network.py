@@ -3,10 +3,14 @@ from typing import Any
 
 from pydicom import Dataset
 from pynetdicom import AE
-from pynetdicom.sop_class import ModalityWorklistInformationFind, Verification
+from pynetdicom.sop_class import (
+    ModalityWorklistInformationFind,
+    StudyRootQueryRetrieveInformationModelFind,
+    Verification,
+)
 
 from app.core.config import settings
-from app.dicom.datasets import parse_worklist_result
+from app.dicom.datasets import parse_study_result, parse_worklist_result
 from app.dicom.errors import (
     DicomAssociationAborted,
     DicomAssociationRejected,
@@ -99,6 +103,55 @@ def find_worklist(endpoint: dict[str, Any], query: Dataset) -> dict[str, Any]:
             "entries": rows,
             "duration_ms": round((monotonic() - started) * 1000),
             "steps": ["TCP reachable", "Association accepted", "C-FIND completed successfully"],
+        }
+    finally:
+        assoc.release()
+
+
+def find_studies(endpoint: dict[str, Any], query: Dataset) -> dict[str, Any]:
+    started = monotonic()
+    ae = _ae(endpoint["calling_ae"])
+    ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
+    ae.add_requested_context(Verification)
+    assoc = ae.associate(endpoint["host"], endpoint["port"], ae_title=endpoint["called_ae"])
+    if not assoc.is_established:
+        _association_error(assoc, endpoint["called_ae"])
+    rows, final_code = [], None
+    try:
+        if not any(
+            context.abstract_syntax == StudyRootQueryRetrieveInformationModelFind
+            for context in assoc.accepted_contexts
+        ):
+            raise DicomPresentationContextError(
+                "Study Root FIND presentation context was not accepted",
+                {"sop_class": str(StudyRootQueryRetrieveInformationModelFind), "association": True},
+            )
+        for status, identifier in assoc.send_c_find(
+            query, StudyRootQueryRetrieveInformationModelFind
+        ):
+            code = getattr(status, "Status", None) if status else None
+            if code in (0xFF00, 0xFF01) and identifier is not None:
+                rows.append(parse_study_result(identifier))
+            else:
+                final_code = code
+        if final_code is None:
+            _missing_response(assoc, "C-FIND")
+        if final_code != 0:
+            raise DicomFindError(
+                "Study Root C-FIND failed",
+                {"status": status_hex(final_code), "association": True},
+            )
+        return {
+            "success": True,
+            "status": status_hex(final_code),
+            "count": len(rows),
+            "entries": rows,
+            "duration_ms": round((monotonic() - started) * 1000),
+            "steps": [
+                "TCP reachable",
+                "Association accepted",
+                "Study Root C-FIND completed successfully",
+            ],
         }
     finally:
         assoc.release()

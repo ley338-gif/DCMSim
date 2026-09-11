@@ -24,6 +24,8 @@ Farb-, Abstands-, Typografie-, Radius-, Shadow-, Control- und Z-Index-Tokens lie
 
 Beim Worklist-Test validiert FastAPI den Endpunkt, baut ein pydicom-Query-Dataset und öffnet synchron eine begrenzte pynetdicom-Association. Pending-C-FIND-Antworten werden in Tabellenfelder und eine rekursive technische Darstellung übersetzt. Das Abschlussresultat wird in `test_runs` gespeichert.
 
+Die PACS-Suche verwendet das Study Root Query/Retrieve Information Model auf Level `STUDY`. Mindestens ein Filter verhindert unbeabsichtigte unbeschränkte Abfragen. Antwort-Datasets werden nur an den aktuellen Browser geliefert; die Historie speichert Status, Dauer und Trefferzahl, aber weder Patientenresultate noch patientenbezogene Suchfilter. C-MOVE und C-GET sind getrennte, nicht implementierte Dienste.
+
 Beim Store-Test erzeugt der Server ein gültiges monochromes Testobjekt mit neuen Study-, Series- und SOP-UIDs oder liest einen Upload aus dem Arbeitsspeicher. SOP Class und Transfer Syntax bilden genau einen angeforderten Presentation Context. Die C-STORE-Antwort und Objektidentifikatoren landen in der Historie.
 
 Ein Modalitätsprofil bildet ein Gerät ab und referenziert bestehende Ziele getrennt für MWL und Storage. Beim manuellen Modalitätscheck führt ein synchroner Service die aktivierten Prüfungen nacheinander aus. MWL verwendet zunächst Datum, Modalität und Calling AE als Station AE; bei null Treffern folgt eine rein diagnostische Abfrage ohne Station AE. Storage wählt für CT, MR, US, CR und DX die entsprechende SOP Class, andernfalls transparent Secondary Capture. Ein einzelner `modality_check`-Historieneintrag enthält die Subresultate, aber keine Worklist-Patientenlisten.

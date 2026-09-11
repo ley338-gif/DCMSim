@@ -16,9 +16,11 @@ __all__ = [
     "SOP_CLASSES",
     "TRANSFER_SYNTAXES",
     "build_mwl_query",
+    "build_study_query",
     "dataset_summary",
     "generate_test_dataset",
     "parse_worklist_result",
+    "parse_study_result",
     "read_uploaded_dataset",
     "serialize_dataset",
 ]
@@ -70,6 +72,25 @@ def build_mwl_query(filters: dict[str, Any], broad: bool = False) -> Dataset:
     return query
 
 
+def build_study_query(filters: dict[str, Any]) -> Dataset:
+    query = Dataset()
+    query.QueryRetrieveLevel = "STUDY"
+    query.PatientName = filters.get("patient_name") or ""
+    query.PatientID = filters.get("patient_id") or ""
+    query.AccessionNumber = filters.get("accession_number") or ""
+    study_date = filters.get("study_date")
+    if isinstance(study_date, date):
+        study_date = study_date.strftime("%Y%m%d")
+    query.StudyDate = str(study_date).replace("-", "") if study_date else ""
+    query.StudyTime = ""
+    query.StudyInstanceUID = ""
+    query.StudyDescription = ""
+    query.ModalitiesInStudy = (filters.get("modality") or "").upper()
+    query.NumberOfStudyRelatedSeries = ""
+    query.NumberOfStudyRelatedInstances = ""
+    return query
+
+
 def read_uploaded_dataset(content: bytes) -> FileDataset:
     return dcmread(BytesIO(content), force=False)
 
@@ -114,5 +135,29 @@ def parse_worklist_result(ds: Dataset) -> dict[str, Any]:
         "start_time": str(sps.get("ScheduledProcedureStepStartTime", "")),
         "sps_description": str(sps.get("ScheduledProcedureStepDescription", "")),
         "requested_procedure_description": str(ds.get("RequestedProcedureDescription", "")),
+        "dataset": serialize_dataset(ds),
+    }
+
+
+def parse_study_result(ds: Dataset) -> dict[str, Any]:
+    modalities = ds.get("ModalitiesInStudy", "")
+    if not isinstance(modalities, str) and hasattr(modalities, "__iter__"):
+        modalities = "\\".join(str(item) for item in modalities)
+    def count(keyword: str) -> int:
+        try:
+            return int(ds.get(keyword, 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+    return {
+        "patient_name": str(ds.get("PatientName", "")),
+        "patient_id": str(ds.get("PatientID", "")),
+        "accession_number": str(ds.get("AccessionNumber", "")),
+        "study_date": str(ds.get("StudyDate", "")),
+        "study_time": str(ds.get("StudyTime", "")),
+        "study_description": str(ds.get("StudyDescription", "")),
+        "study_instance_uid": str(ds.get("StudyInstanceUID", "")),
+        "modalities": str(modalities),
+        "series_count": count("NumberOfStudyRelatedSeries"),
+        "instance_count": count("NumberOfStudyRelatedInstances"),
         "dataset": serialize_dataset(ds),
     }
