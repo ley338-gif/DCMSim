@@ -1,0 +1,3 @@
+import {Result} from '../../api/client'
+import {ProgressStep,StepProgress} from '../ui/Progress'
+export function TransferProgress({loading,result,hasFile}:{loading:boolean;result?:Result;hasFile:boolean}){const labels=['Daten geladen','Verbindung','C-STORE senden','Antwort','Abgeschlossen'];const steps:ProgressStep[]=labels.map((label,index)=>{if(result)return {label,state:result.success?'complete':index<2?'complete':index===2?'error':'pending'};if(loading)return {label,state:index===0?'complete':index===1?'active':'pending'};return {label,state:index===0&&hasFile?'complete':'pending'}});return <StepProgress steps={steps}/>}

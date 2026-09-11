@@ -1,0 +1,6 @@
+import {ReactNode,useState} from 'react'
+import {ChevronDown,Copy,Download} from 'lucide-react'
+import {Button} from './Button'
+export function CollapsiblePanel({title,children,defaultOpen=false,action}:{title:string;children:ReactNode;defaultOpen?:boolean;action?:ReactNode}){const [open,setOpen]=useState(defaultOpen);return <div className="collapsible"><div className="collapsible__header"><button aria-expanded={open} onClick={()=>setOpen(!open)}><ChevronDown className={open?'expanded':''} size={18}/>{title}</button>{action}</div>{open&&<div className="collapsible__content">{children}</div>}</div>}
+export function CopyButton({value,label='Kopieren'}:{value:string;label?:string}){const [copied,setCopied]=useState(false);return <Button variant="outline" icon={<Copy size={15}/>} onClick={async()=>{await navigator.clipboard.writeText(value);setCopied(true);setTimeout(()=>setCopied(false),1200)}}>{copied?'Kopiert':label}</Button>}
+export function DownloadButton({value,filename}:{value:string;filename:string}){return <Button variant="outline" icon={<Download size={15}/>} onClick={()=>{const url=URL.createObjectURL(new Blob([value],{type:'text/plain'}));const link=document.createElement('a');link.href=url;link.download=filename;link.click();URL.revokeObjectURL(url)}}>Download</Button>}

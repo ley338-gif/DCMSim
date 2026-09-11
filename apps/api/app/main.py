@@ -12,7 +12,9 @@ from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
 
-logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+logging.basicConfig(
+    level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
 
 
 @asynccontextmanager
@@ -21,8 +23,13 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="DCMSim API", version="0.1.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(title="DCMSim API", version="0.2.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(router)
 
 static_dir = Path(__file__).parent / "static"
@@ -33,4 +40,3 @@ if static_dir.exists():
     def spa(path: str):
         requested = static_dir / path
         return FileResponse(requested if requested.is_file() else static_dir / "index.html")
-

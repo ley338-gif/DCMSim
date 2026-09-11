@@ -1,29 +1,28 @@
-from datetime import date, datetime
+from datetime import date
 from io import BytesIO
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageFont
-from pydicom import Dataset, FileDataset, FileMetaDataset, dcmread
-from pydicom.uid import (
-    ComputedRadiographyImageStorage,
-    CTImageStorage,
-    DigitalXRayImageStorageForPresentation,
-    ExplicitVRLittleEndian,
-    ImplicitVRLittleEndian,
-    MRImageStorage,
-    SecondaryCaptureImageStorage,
-    UltrasoundImageStorage,
-    generate_uid,
+from pydicom import Dataset, FileDataset, dcmread
+
+from app.dicom.synthetic import (
+    MODALITIES,
+    SOP_CLASSES,
+    TRANSFER_SYNTAXES,
+    generate_test_dataset,
 )
 
-SOP_CLASSES = {
-    "secondary_capture": SecondaryCaptureImageStorage,
-    "ct": CTImageStorage,
-    "mr": MRImageStorage,
-    "ultrasound": UltrasoundImageStorage,
-    "cr": ComputedRadiographyImageStorage,
-    "dx": DigitalXRayImageStorageForPresentation,
-}
+__all__ = [
+    "MODALITIES",
+    "SOP_CLASSES",
+    "TRANSFER_SYNTAXES",
+    "build_mwl_query",
+    "dataset_summary",
+    "generate_test_dataset",
+    "parse_worklist_result",
+    "read_uploaded_dataset",
+    "serialize_dataset",
+]
+
 SOP_LABELS = {
     "secondary_capture": "Secondary Capture Image Storage",
     "ct": "CT Image Storage",
@@ -32,17 +31,9 @@ SOP_LABELS = {
     "cr": "Computed Radiography Image Storage",
     "dx": "Digital X-Ray Image Storage",
 }
-TRANSFER_SYNTAXES = {
-    "explicit_vr_little_endian": ExplicitVRLittleEndian,
-    "implicit_vr_little_endian": ImplicitVRLittleEndian,
-}
 TRANSFER_LABELS = {
     "explicit_vr_little_endian": "Explicit VR Little Endian",
     "implicit_vr_little_endian": "Implicit VR Little Endian",
-}
-MODALITIES = {
-    "secondary_capture": "OT", "ct": "CT", "mr": "MR",
-    "ultrasound": "US", "cr": "CR", "dx": "DX",
 }
 
 
@@ -79,45 +70,6 @@ def build_mwl_query(filters: dict[str, Any], broad: bool = False) -> Dataset:
     return query
 
 
-def _test_pixels(patient_id: str) -> bytes:
-    image = Image.new("L", (640, 480), color=20)
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default(size=28)
-    draw.rectangle((18, 18, 621, 461), outline=220, width=4)
-    lines = ["DCMSIM TEST", "NOT FOR DIAGNOSTIC USE", f"Patient: {patient_id}", "Study: PACS STORE TEST"]
-    for idx, line in enumerate(lines):
-        draw.text((55, 105 + idx * 65), line, fill=240, font=font)
-    return image.tobytes()
-
-
-def generate_test_dataset(sop_key: str, transfer_key: str) -> FileDataset:
-    sop_uid, study_uid, series_uid = generate_uid(), generate_uid(), generate_uid()
-    sop_class = SOP_CLASSES[sop_key]
-    transfer_syntax = TRANSFER_SYNTAXES[transfer_key]
-    now = datetime.now()
-    patient_id = f"DCMSIM-{now:%Y%m%d-%H%M%S}"
-    meta = FileMetaDataset()
-    meta.MediaStorageSOPClassUID = sop_class
-    meta.MediaStorageSOPInstanceUID = sop_uid
-    meta.TransferSyntaxUID = transfer_syntax
-    meta.ImplementationClassUID = generate_uid()
-    ds = FileDataset(None, {}, file_meta=meta, preamble=b"\0" * 128)
-    ds.SOPClassUID, ds.SOPInstanceUID = sop_class, sop_uid
-    ds.StudyInstanceUID, ds.SeriesInstanceUID = study_uid, series_uid
-    ds.PatientName, ds.PatientID, ds.PatientBirthDate, ds.PatientSex = "DCMSIM^TEST", patient_id, "", "O"
-    ds.StudyDate = ds.SeriesDate = ds.ContentDate = now.strftime("%Y%m%d")
-    ds.StudyTime = ds.SeriesTime = ds.ContentTime = now.strftime("%H%M%S")
-    ds.AccessionNumber, ds.StudyID = f"DCMSIM-{now:%H%M%S}", "DCMSIM"
-    ds.SeriesNumber, ds.InstanceNumber, ds.Modality = 1, 1, MODALITIES[sop_key]
-    ds.Manufacturer = "DCMSim"
-    ds.StudyDescription, ds.SeriesDescription = "PACS STORE TEST", "NOT FOR DIAGNOSTIC USE"
-    ds.Rows, ds.Columns, ds.SamplesPerPixel = 480, 640, 1
-    ds.PhotometricInterpretation = "MONOCHROME2"
-    ds.BitsAllocated, ds.BitsStored, ds.HighBit, ds.PixelRepresentation = 8, 8, 7, 0
-    ds.PixelData = _test_pixels(patient_id)
-    return ds
-
-
 def read_uploaded_dataset(content: bytes) -> FileDataset:
     return dcmread(BytesIO(content), force=False)
 
@@ -152,10 +104,14 @@ def parse_worklist_result(ds: Dataset) -> dict[str, Any]:
     sequence = getattr(ds, "ScheduledProcedureStepSequence", [])
     sps = sequence[0] if sequence else Dataset()
     return {
-        "patient_name": str(ds.get("PatientName", "")), "patient_id": str(ds.get("PatientID", "")),
-        "birth_date": str(ds.get("PatientBirthDate", "")), "accession_number": str(ds.get("AccessionNumber", "")),
-        "modality": str(sps.get("Modality", "")), "station_ae": str(sps.get("ScheduledStationAETitle", "")),
-        "start_date": str(sps.get("ScheduledProcedureStepStartDate", "")), "start_time": str(sps.get("ScheduledProcedureStepStartTime", "")),
+        "patient_name": str(ds.get("PatientName", "")),
+        "patient_id": str(ds.get("PatientID", "")),
+        "birth_date": str(ds.get("PatientBirthDate", "")),
+        "accession_number": str(ds.get("AccessionNumber", "")),
+        "modality": str(sps.get("Modality", "")),
+        "station_ae": str(sps.get("ScheduledStationAETitle", "")),
+        "start_date": str(sps.get("ScheduledProcedureStepStartDate", "")),
+        "start_time": str(sps.get("ScheduledProcedureStepStartTime", "")),
         "sps_description": str(sps.get("ScheduledProcedureStepDescription", "")),
         "requested_procedure_description": str(ds.get("RequestedProcedureDescription", "")),
         "dataset": serialize_dataset(ds),

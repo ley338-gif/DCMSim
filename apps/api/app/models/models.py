@@ -25,8 +25,34 @@ class Target(Base):
     store_called_ae: Mapped[str | None] = mapped_column(String(16))
     default_calling_ae: Mapped[str] = mapped_column(String(16), default="DCMSIM")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
     runs: Mapped[list["TestRun"]] = relationship(back_populates="target")
+
+
+class ModalityProfile(Base):
+    __tablename__ = "modality_profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), unique=True)
+    description: Mapped[str | None] = mapped_column(String(500))
+    modality: Mapped[str] = mapped_column(String(8))
+    calling_ae: Mapped[str] = mapped_column(String(16))
+    mwl_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    mwl_target_id: Mapped[int | None] = mapped_column(
+        ForeignKey("targets.id", ondelete="SET NULL"), index=True
+    )
+    store_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    store_target_id: Mapped[int | None] = mapped_column(
+        ForeignKey("targets.id", ondelete="SET NULL"), index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    mwl_target: Mapped[Target | None] = relationship(foreign_keys=[mwl_target_id])
+    store_target: Mapped[Target | None] = relationship(foreign_keys=[store_target_id])
 
 
 class TestRun(Base):
@@ -36,10 +62,11 @@ class TestRun(Base):
     test_type: Mapped[str] = mapped_column(String(32), index=True)
     target_id: Mapped[int | None] = mapped_column(ForeignKey("targets.id", ondelete="SET NULL"))
     manual_target_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
     duration_ms: Mapped[int] = mapped_column(Integer)
     success: Mapped[bool] = mapped_column(Boolean)
     status: Mapped[str] = mapped_column(String(64))
     result_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     target: Mapped[Target | None] = relationship(back_populates="runs")
-

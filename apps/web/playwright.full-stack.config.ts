@@ -1,0 +1,3 @@
+import {defineConfig,devices} from '@playwright/test'
+
+export default defineConfig({testDir:'./e2e-full-stack',fullyParallel:false,workers:1,reporter:'html',outputDir:'test-results/full-stack',use:{baseURL:'http://127.0.0.1:41738',trace:'on-first-retry'},webServer:[{command:'python ../api/tests/full_stack/server.py',url:'http://127.0.0.1:18080/api/health',reuseExistingServer:false,timeout:30000},{command:'npm run dev -- --host 127.0.0.1 --port 41738 --strictPort',url:'http://127.0.0.1:41738',reuseExistingServer:false,timeout:30000,env:{DCMSIM_API_PROXY:'http://127.0.0.1:18080'}}],projects:[{name:'chromium-full-stack',use:{...devices['Desktop Chrome']}}]})
