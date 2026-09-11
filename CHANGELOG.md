@@ -8,6 +8,18 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.3] - 2026-09-12
+
+### Added
+
+- Zentrale Logging-Konfiguration und Regressionstests für die DICOM-Bibliothekslogger.
+
+### Changed
+
+- pydicom und pynetdicom protokollieren unabhängig vom Application Log Level erst ab `WARNING`, damit reguläre Container-Logs keine vollständigen DICOM-Datasets enthalten.
+- Ungültige Werte für das Application Log Level fallen sicher auf `INFO` zurück.
+- Produktversion auf 0.3.3 angehoben.
+
 ## [0.3.2] - 2026-09-12
 
 ### Added

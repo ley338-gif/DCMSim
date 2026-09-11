@@ -72,7 +72,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.2"}
+    return {"status": "ok", "version": "0.3.3"}
 
 
 @router.get("/configuration/export")

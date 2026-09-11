@@ -24,6 +24,8 @@ Anwenden: `alembic -c apps/api/alembic.ini upgrade head`. Erstellen: `alembic -c
 
 Lokale Test-SCPs werden in den DICOM-Integrationstests mit pynetdicom auf dynamisch freien Localhost-Ports gestartet. Der Full-Stack-Harness verwendet feste, nur lokal gebundene Testports und eine temporäre Datenbank. Alle Daten sind synthetisch. Docker nutzt dasselbe Image wie die Produktion und ein Volume unter `/data`.
 
+`DCMSIM_LOG_LEVEL` steuert die DCMSim-Anwendungslogs. Die Bibliothekslogger von pydicom und pynetdicom bleiben aus Datenschutzgründen mindestens auf `WARNING`; ausführliche DICOM-Antworten werden kontrolliert im aktuellen Browser statt im Container-Log dargestellt.
+
 ## Release-Prozess
 
 Version und Changelog aktualisieren; Backend-, Frontend-, E2E-, Migration- und Docker-Prüfungen ausführen; DICOM Support Matrix und User Manual abgleichen; anschließend Tag gemäß Semantic Versioning erstellen. Vor einem Upgrade empfiehlt sich ein SQLite-Backup über **Einstellungen → Datensicherung**.

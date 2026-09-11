@@ -2,6 +2,8 @@
 
 Fehlerresultate zeigen ab Version 0.2.1 neben dem stabilen technischen Code einen konkreten nächsten Prüfschritt. Diese Empfehlung grenzt die Ursache ein, ersetzt aber nicht das Log der Gegenstelle.
 
+Die Container-Logs enthalten bewusst keine vollständigen DICOM-Dataset-Dumps. Für Request-/Response-Elemente die technische Detailansicht des unmittelbar ausgeführten Tests verwenden; die dauerhafte Historie ist zusätzlich datensparsam reduziert.
+
 ## Worklist liefert 0 Treffer
 
 1. Broad Query ausführen.

@@ -26,6 +26,8 @@ Beim Worklist-Test validiert FastAPI den Endpunkt, baut ein pydicom-Query-Datase
 
 Der aktuelle Browser erhält Trefferlisten und eingegebene Filter nur als unmittelbare Request-Antwort. Die zentrale Historiengrenze entfernt sie vor jeder Persistenz. Bei C-STORE bleiben technische UIDs und Aushandlungsdaten erhalten, während Patientenname und Patient-ID nicht gespeichert werden. Migration `0004` wendet dieselben Regeln irreversibel auf bereits vorhandene Historieneinträge an.
 
+Die zentrale Logging-Konfiguration trennt Anwendungsereignisse von DICOM-Bibliotheksausgaben. `dcmsim.tests` protokolliert Endpunkt, AE Titles, Dauer, Ergebnis und Fehlerklasse; die Logger von pydicom und pynetdicom beginnen bei `WARNING`, damit deren ausführliche INFO-/DEBUG-Dataset-Dumps nicht in reguläre Container-Logs gelangen.
+
 Die PACS-Suche verwendet das Study Root Query/Retrieve Information Model auf Level `STUDY`. Mindestens ein Filter verhindert unbeabsichtigte unbeschränkte Abfragen. Antwort-Datasets werden nur an den aktuellen Browser geliefert; die Historie speichert Status, Dauer und Trefferzahl, aber weder Patientenresultate noch patientenbezogene Suchfilter. C-MOVE und C-GET sind getrennte, nicht implementierte Dienste.
 
 Beim Store-Test erzeugt der Server ein gültiges monochromes Testobjekt mit neuen Study-, Series- und SOP-UIDs oder liest einen Upload aus dem Arbeitsspeicher. SOP Class und Transfer Syntax bilden genau einen angeforderten Presentation Context. Die C-STORE-Antwort und Objektidentifikatoren landen in der Historie.
