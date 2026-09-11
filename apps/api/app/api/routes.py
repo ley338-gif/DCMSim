@@ -72,7 +72,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.1"}
+    return {"status": "ok", "version": "0.3.2"}
 
 
 @router.get("/configuration/export")
@@ -286,12 +286,7 @@ def dicom_studies(payload: StudyQueryRequest, db: Session = Depends(get_db)):
     except DicomError as exc:
         result = error_result(exc, started)
     result["target_name"] = endpoint_name(db, endpoint)
-    history_result = {
-        key: value
-        for key, value in result.items()
-        if key not in {"entries", "active_filters"}
-    }
-    run = record_run(db, "qr_find", endpoint, history_result)
+    run = record_run(db, "qr_find", endpoint, result)
     return {**result, "run_id": run.id}
 
 
