@@ -8,6 +8,19 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.2] - 2026-09-12
+
+### Added
+
+- Datenmigration `0004`, die Patientenresultate und patientenbezogene Filter aus vorhandenen Historieneinträgen entfernt.
+- Datenschutztests für Worklist-, PACS-Such- und C-STORE-Historie.
+
+### Changed
+
+- Die zentrale Historienpersistenz entfernt bei Worklist und PACS-Suche Trefferlisten sowie Suchfilter und bei C-STORE Patientenname und Patient-ID.
+- Technische Kennzahlen, Status, Laufzeit und DICOM-UIDs bleiben zur Fehleranalyse erhalten.
+- Produktversion auf 0.3.2 angehoben.
+
 ## [0.3.1] - 2026-09-12
 
 ### Added
