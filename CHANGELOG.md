@@ -8,6 +8,18 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.1] - 2026-09-12
+
+### Added
+
+- Regressionstest für die vollständige Dashboard-Darstellung von PACS-Suche und Modalitätsprüfungen.
+
+### Changed
+
+- Übersicht um PACS-Suche als Schnelltest und Query/Retrieve SCU im Systemstatus ergänzt.
+- Zielstatus, Testverteilung, letzte Tests und konfigurierte Dienste berücksichtigen nun Query/Retrieve und Modalitätsprüfungen vollständig.
+- Produktversion auf 0.3.1 angehoben.
+
 ## [0.3.0] - 2026-09-11
 
 ### Added
