@@ -111,6 +111,39 @@ class ModalityProfileRead(ModalityProfileBase):
     updated_at: datetime
 
 
+class ModalityProfileImport(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    modality: ModalityCode
+    calling_ae: str
+    mwl_enabled: bool = True
+    mwl_target_name: str | None = None
+    store_enabled: bool = True
+    store_target_name: str | None = None
+
+    _calling = field_validator("calling_ae")(validate_ae)
+
+    @model_validator(mode="after")
+    def enabled_services_have_target_names(self):
+        if not self.mwl_enabled and not self.store_enabled:
+            raise ValueError("At least one DICOM service must be enabled")
+        if self.mwl_enabled and not self.mwl_target_name:
+            raise ValueError("Enabled worklist check needs a target name")
+        if self.store_enabled and not self.store_target_name:
+            raise ValueError("Enabled store check needs a target name")
+        return self
+
+
+class ConfigurationImport(BaseModel):
+    format_version: Literal[1]
+    targets: list[TargetCreate]
+    modality_profiles: list[ModalityProfileImport]
+
+
+class HistoryRetentionRequest(BaseModel):
+    days: int = Field(ge=1, le=3650)
+
+
 class WorklistFilters(BaseModel):
     date: Date | None = Field(default_factory=Date.today)
     modality: str | None = Field(default=None, max_length=16)

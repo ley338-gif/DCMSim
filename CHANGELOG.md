@@ -6,7 +6,24 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 ### Added
 
+- Noch keine Änderungen.
+
+## [0.2.1] - 2026-09-11
+
+### Added
+
 - Echter Full-Stack-Smoke-Test für den vollständigen Modalitätsworkflow von Ziel- und Profilerstellung bis zur gespeicherten kombinierten Prüfung.
+- Nicht löschender JSON-Export und -Import für Ziele und Modalitätsprofile.
+- Konsistentes SQLite-Backup über die laufende Datenbankverbindung.
+- Manuell konfigurierbare Bereinigung alter Historieneinträge ohne Scheduler.
+- Konkrete Handlungsempfehlungen für klassifizierte DICOM-Fehler.
+- Abbrechen der Browseranzeige und direktes Wiederholen eines Modalitätschecks.
+
+### Changed
+
+- Unvollständige Profile nach einer Ziel-Löschung werden klar markiert und können vor der Reparatur nicht geprüft werden.
+- Zielnamen erscheinen konsistent in technischen Testresultaten.
+- Mobile Modalitätskarten, Dialoge, Statusmeldungen und Tastaturnavigation wurden verbessert.
 
 ## [0.2.0] - 2026-09-11
 
