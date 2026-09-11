@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from app.core.config import settings
 from app.db.base import Base
-from app.models import Target, TestRun  # noqa: F401
+from app.models import ModalityProfile, Target, TestRun  # noqa: F401
 from sqlalchemy import engine_from_config, pool
 
 config = context.config
@@ -28,4 +28,3 @@ def run_migrations_online():
 
 
 run_migrations_offline() if context.is_offline_mode() else run_migrations_online()
-

@@ -1,4 +1,3 @@
-from app.models.models import Target, TestRun
+from app.models.models import ModalityProfile, Target, TestRun
 
-__all__ = ["Target", "TestRun"]
-
+__all__ = ["ModalityProfile", "Target", "TestRun"]

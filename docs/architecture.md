@@ -26,6 +26,8 @@ Beim Worklist-Test validiert FastAPI den Endpunkt, baut ein pydicom-Query-Datase
 
 Beim Store-Test erzeugt der Server ein gültiges monochromes Testobjekt mit neuen Study-, Series- und SOP-UIDs oder liest einen Upload aus dem Arbeitsspeicher. SOP Class und Transfer Syntax bilden genau einen angeforderten Presentation Context. Die C-STORE-Antwort und Objektidentifikatoren landen in der Historie.
 
+Ein Modalitätsprofil bildet ein Gerät ab und referenziert bestehende Ziele getrennt für MWL und Storage. Beim manuellen Modalitätscheck führt ein synchroner Service die aktivierten Prüfungen nacheinander aus. MWL verwendet zunächst Datum, Modalität und Calling AE als Station AE; bei null Treffern folgt eine rein diagnostische Abfrage ohne Station AE. Storage wählt für CT, MR, US, CR und DX die entsprechende SOP Class, andernfalls transparent Secondary Capture. Ein einzelner `modality_check`-Historieneintrag enthält die Subresultate, aber keine Worklist-Patientenlisten.
+
 Uploads werden größen- und endungsgeprüft, vollständig im Speicher gelesen, nach dem Request geschlossen und nie als Datei oder Pixelinhalt in der Datenbank gespeichert. Bei Fehlern werden interne Exceptions in stabile Codes übersetzt; Stacktraces erreichen den Browser nicht. Timeouts begrenzen TCP, Association und DIMSE.
 
-Die SQLite-Persistenz enthält Ziele und Testläufe. SQLAlchemy hält die Geschäftslogik vom Datenbanktreiber getrennt; Alembic versioniert das Schema. Das lokale Deployment besteht aus einem Container und einem persistenten Volume.
+Die SQLite-Persistenz enthält Ziele, Modalitätsprofile und Testläufe. Beim Löschen eines Ziels setzt die Datenbank Profilreferenzen auf `NULL`; ein betroffenes Profil bleibt sichtbar, kann aber erst nach Wahl eines neuen Ziels wieder geprüft werden. SQLAlchemy hält die Geschäftslogik vom Datenbanktreiber getrennt; Alembic versioniert das Schema. Das lokale Deployment besteht aus einem Container und einem persistenten Volume.

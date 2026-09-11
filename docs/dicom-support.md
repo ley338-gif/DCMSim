@@ -28,3 +28,15 @@ Explicit VR Little Endian und Implicit VR Little Endian werden für synthetische
 
 MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Accession Number und Patient Name sowie eine Broad Query. Query/Retrieve, HL7 und produktive SCP-Dienste gehören nicht zum MVP.
 
+## Modalitätscheck
+
+| Profilmodalität | Store SOP Class |
+|---|---|
+| CT | CT Image Storage |
+| MR | MR Image Storage |
+| US | Ultrasound Image Storage |
+| CR | Computed Radiography Image Storage |
+| DX | Digital X-Ray Image Storage for Presentation |
+| OT, XA, MG, NM, PT | Secondary Capture Image Storage (Fallback wird angezeigt) |
+
+Der manuelle Check unterstützt MWL und Store einzeln oder kombiniert. Er ist keine Überwachung und startet weder Scheduler noch Hintergrunddienst.

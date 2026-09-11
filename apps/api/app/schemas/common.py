@@ -76,6 +76,41 @@ class TargetRead(TargetBase):
     updated_at: datetime
 
 
+ModalityCode = Literal["CT", "MR", "US", "CR", "DX", "OT", "XA", "MG", "NM", "PT"]
+
+
+class ModalityProfileBase(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    modality: ModalityCode
+    calling_ae: str
+    mwl_enabled: bool = True
+    mwl_target_id: int | None = None
+    store_enabled: bool = True
+    store_target_id: int | None = None
+
+    _calling = field_validator("calling_ae")(validate_ae)
+
+
+class ModalityProfileCreate(ModalityProfileBase):
+    @model_validator(mode="after")
+    def enabled_services_have_targets(self):
+        if not self.mwl_enabled and not self.store_enabled:
+            raise ValueError("At least one DICOM service must be enabled")
+        if self.mwl_enabled and self.mwl_target_id is None:
+            raise ValueError("Enabled worklist check needs a target")
+        if self.store_enabled and self.store_target_id is None:
+            raise ValueError("Enabled store check needs a target")
+        return self
+
+
+class ModalityProfileRead(ModalityProfileBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class WorklistFilters(BaseModel):
     date: Date | None = Field(default_factory=Date.today)
     modality: str | None = Field(default=None, max_length=16)
@@ -92,6 +127,10 @@ class WorklistRequest(Endpoint):
 
 SopClassKey = Literal["secondary_capture", "ct", "mr", "ultrasound", "cr", "dx"]
 TransferSyntaxKey = Literal["explicit_vr_little_endian", "implicit_vr_little_endian"]
+
+
+class ModalityCheckRequest(BaseModel):
+    transfer_syntax: TransferSyntaxKey = "explicit_vr_little_endian"
 
 
 class StoreRequest(Endpoint):

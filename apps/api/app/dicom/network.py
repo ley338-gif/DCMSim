@@ -8,11 +8,12 @@ from pynetdicom.sop_class import ModalityWorklistInformationFind, Verification
 from app.core.config import settings
 from app.dicom.datasets import parse_worklist_result
 from app.dicom.errors import (
+    DicomAssociationAborted,
     DicomAssociationRejected,
-    DicomConnectionError,
     DicomFindError,
     DicomPresentationContextError,
     DicomTimeoutError,
+    TcpConnectionError,
 )
 from app.dicom.status import classify_store_status, status_hex
 
@@ -27,10 +28,24 @@ def _ae(calling_ae: str) -> AE:
 
 def _association_error(assoc, called_ae: str):
     if assoc.is_rejected:
-        raise DicomAssociationRejected("Association rejected by remote AE", {"called_ae": called_ae})
+        raise DicomAssociationRejected(
+            "Association rejected by remote AE", {"called_ae": called_ae}
+        )
     if assoc.is_aborted:
-        raise DicomConnectionError("Connection aborted by remote AE")
-    raise DicomConnectionError("TCP connection or DICOM association failed")
+        raise DicomAssociationAborted("Association aborted by remote AE")
+    raise TcpConnectionError("TCP connection or DICOM association failed")
+
+
+def _missing_response(assoc, operation: str):
+    # pynetdicom locally aborts an association when its DIMSE timeout expires.
+    # A peer initiated A-ABORT ends the requestor thread without that local flag.
+    if assoc.is_aborted:
+        raise DicomTimeoutError(
+            f"No final {operation} response received", {"association": True}
+        )
+    raise DicomAssociationAborted(
+        f"Association aborted during {operation}", {"association": True}
+    )
 
 
 def echo(endpoint: dict[str, Any]) -> dict[str, Any]:
@@ -44,8 +59,13 @@ def echo(endpoint: dict[str, Any]) -> dict[str, Any]:
         status = assoc.send_c_echo()
         code = getattr(status, "Status", None)
         if code is None:
-            raise DicomTimeoutError("No C-ECHO response received")
-        return {"success": code == 0, "status": status_hex(code), "duration_ms": round((monotonic() - started) * 1000), "steps": ["TCP reachable", "Association accepted", "C-ECHO response received"]}
+            _missing_response(assoc, "C-ECHO")
+        return {
+            "success": code == 0,
+            "status": status_hex(code),
+            "duration_ms": round((monotonic() - started) * 1000),
+            "steps": ["TCP reachable", "Association accepted", "C-ECHO response received"],
+        }
     finally:
         assoc.release()
 
@@ -66,10 +86,20 @@ def find_worklist(endpoint: dict[str, Any], query: Dataset) -> dict[str, Any]:
             else:
                 final_code = code
         if final_code is None:
-            raise DicomTimeoutError("No final C-FIND response received")
+            _missing_response(assoc, "C-FIND")
         if final_code != 0:
-            raise DicomFindError("C-FIND failed", {"status": status_hex(final_code)})
-        return {"success": True, "status": status_hex(final_code), "count": len(rows), "entries": rows, "duration_ms": round((monotonic() - started) * 1000), "steps": ["TCP reachable", "Association accepted", "C-FIND completed successfully"]}
+            raise DicomFindError(
+                "C-FIND failed",
+                {"status": status_hex(final_code), "association": True},
+            )
+        return {
+            "success": True,
+            "status": status_hex(final_code),
+            "count": len(rows),
+            "entries": rows,
+            "duration_ms": round((monotonic() - started) * 1000),
+            "steps": ["TCP reachable", "Association accepted", "C-FIND completed successfully"],
+        }
     finally:
         assoc.release()
 
@@ -83,12 +113,42 @@ def store_dataset(endpoint: dict[str, Any], ds: Dataset) -> dict[str, Any]:
     if not assoc.is_established:
         _association_error(assoc, endpoint["called_ae"])
     try:
-        accepted = any(cx.abstract_syntax == ds.SOPClassUID and transfer_syntax in cx.transfer_syntax for cx in assoc.accepted_contexts)
+        accepted = any(
+            cx.abstract_syntax == ds.SOPClassUID and transfer_syntax in cx.transfer_syntax
+            for cx in assoc.accepted_contexts
+        )
         if not accepted:
-            raise DicomPresentationContextError("No acceptable presentation context", {"sop_class": str(ds.SOPClassUID), "transfer_syntax": str(transfer_syntax)})
+            raise DicomPresentationContextError(
+                "No acceptable presentation context",
+                {
+                    "sop_class": str(ds.SOPClassUID),
+                    "transfer_syntax": str(transfer_syntax),
+                    "association": True,
+                },
+            )
         status = assoc.send_c_store(ds)
         code = getattr(status, "Status", None) if status else None
+        if code is None:
+            _missing_response(assoc, "C-STORE")
         category, message = classify_store_status(code)
-        return {"success": category in ("success", "warning"), "category": category, "code": "DICOM_STORE_WARNING" if category == "warning" else "DICOM_STORE_FAILED" if category == "failure" else None, "message": message, "status": status_hex(code), "duration_ms": round((monotonic() - started) * 1000), "steps": ["TCP reachable", "Association accepted", "Presentation Context accepted", "C-STORE sent", "C-STORE response received"]}
+        return {
+            "success": category in ("success", "warning"),
+            "category": category,
+            "code": "DICOM_STORE_WARNING"
+            if category == "warning"
+            else "DICOM_STORE_FAILED"
+            if category == "failure"
+            else None,
+            "message": message,
+            "status": status_hex(code),
+            "duration_ms": round((monotonic() - started) * 1000),
+            "steps": [
+                "TCP reachable",
+                "Association accepted",
+                "Presentation Context accepted",
+                "C-STORE sent",
+                "C-STORE response received",
+            ],
+        }
     finally:
         assoc.release()

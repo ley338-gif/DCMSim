@@ -22,6 +22,22 @@ Station AE ist häufig modalitätsspezifisch. Ohne diesen Filter erneut testen. 
 
 Prüfen, ob die gewählte SOP Class am PACS freigegeben ist. Danach zwischen Explicit und Implicit VR Little Endian wechseln. „No Acceptable Presentation Context“ ist eine Aushandlungsablehnung vor C-STORE, kein Bildfehler.
 
+## Worklist funktioniert, Store nicht
+
+Das MWL-Ziel ist erreichbar und akzeptiert C-FIND; daraus folgt nicht, dass der Storage-Dienst dieselbe Freischaltung besitzt. Store Called AE und Port, Freigabe der Calling AE und Quell-IP sowie akzeptierte SOP Class und Transfer Syntax am PACS prüfen.
+
+## Store funktioniert, Worklist nicht
+
+Die Storage-Freigabe bestätigt nur C-STORE. MWL Called AE und Port sowie die C-FIND-Freigabe separat prüfen. Wenn die Association funktioniert, Query zunächst ohne Station AE und anschließend ohne weitere Filter vergleichen.
+
+## Station AE liefert keine Treffer
+
+Zeigt der automatische Versuch ohne Station AE Treffer, ist die Worklist grundsätzlich erreichbar. Schreibweise und Mapping des Profil-Calling-AE mit der Scheduled Station AE im RIS vergleichen. DCMSim bewertet dies bewusst nur als Beobachtung.
+
+## SOP Class oder Transfer Syntax nicht akzeptiert
+
+`DICOM_NO_PRESENTATION_CONTEXT` bedeutet, dass die Gegenstelle die konkrete Kombination nicht angenommen hat. Zuerst SOP-Class-Freigabe prüfen, dann Explicit gegen Implicit VR Little Endian testen. Bei Modalitäten ohne eigenen Generator verwendet der kombinierte Check transparent Secondary Capture.
+
 ## C-STORE Status ungleich 0x0000
 
 `0xBxxx` ist eine Warnung; das PACS kann das Objekt angenommen und verändert haben. `0xAxxx`/`0xCxxx` ist ein Fehler. Statuscode mit der Herstellerdokumentation abgleichen.
@@ -33,4 +49,3 @@ Firewall, Routing, falschen Port und Antwortzeit der Gegenstelle prüfen. DCMSim
 ## PACS erreichbar, Bild aber nicht auffindbar
 
 Study-, Series- und SOP-UID aus dem Testergebnis kopieren und im PACS-Log suchen. Patient ID beginnt mit `DCMSIM-`; Study Description ist `PACS STORE TEST`. Importregeln, Quarantäne und Modalitätsfilter des PACS prüfen.
-

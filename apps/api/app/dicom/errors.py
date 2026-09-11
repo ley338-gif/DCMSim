@@ -7,12 +7,16 @@ class DicomError(Exception):
         self.details = details or {}
 
 
-class DicomConnectionError(DicomError):
-    code = "DICOM_CONNECTION_FAILED"
+class TcpConnectionError(DicomError):
+    code = "TCP_CONNECTION_FAILED"
 
 
 class DicomAssociationRejected(DicomError):
     code = "DICOM_ASSOCIATION_REJECTED"
+
+
+class DicomAssociationAborted(DicomError):
+    code = "DICOM_ASSOCIATION_ABORTED"
 
 
 class DicomTimeoutError(DicomError):
@@ -28,5 +32,4 @@ class DicomStoreError(DicomError):
 
 
 class DicomFindError(DicomError):
-    code = "DICOM_FIND_FAILED"
-
+    code = "DICOM_C_FIND_FAILED"

@@ -8,10 +8,24 @@ from app.models import TestRun
 logger = logging.getLogger("dcmsim.tests")
 
 
-def record_run(db: Session, test_type: str, endpoint: dict[str, Any], result: dict[str, Any]) -> TestRun:
+def record_run(
+    db: Session, test_type: str, endpoint: dict[str, Any], result: dict[str, Any]
+) -> TestRun:
     target_id = endpoint.get("target_id")
-    manual = None if target_id else {k: endpoint.get(k) for k in ("host", "port", "called_ae", "calling_ae")}
-    run = TestRun(test_type=test_type, target_id=target_id, manual_target_json=manual, duration_ms=result.get("duration_ms", 0), success=result.get("success", False), status=result.get("status") or result.get("code", "UNKNOWN"), result_json=result)
+    manual = None
+    if not target_id and endpoint.get("host"):
+        manual = {
+            key: endpoint.get(key) for key in ("host", "port", "called_ae", "calling_ae")
+        }
+    run = TestRun(
+        test_type=test_type,
+        target_id=target_id,
+        manual_target_json=manual,
+        duration_ms=result.get("duration_ms", 0),
+        success=result.get("success", False),
+        status=result.get("status") or result.get("code", "UNKNOWN"),
+        result_json=result,
+    )
     db.add(run)
     db.commit()
     db.refresh(run)

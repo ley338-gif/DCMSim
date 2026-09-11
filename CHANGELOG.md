@@ -6,26 +6,44 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 ### Added
 
-- Initialer DCMSim-MVP mit Zielverwaltung, Testhistorie und technischer Weboberfläche.
-- Echte DICOM-C-ECHO-, MWL-C-FIND- und C-STORE-SCU-Implementierung.
-- Synthetische Testobjekte für sechs SOP Classes sowie flüchtiger DICOM-Upload.
-- Deterministische Worklist-Nulltreffer-Diagnose und klassifizierte DICOM-Fehler.
-- Docker-Stack, Alembic-Schema, CI sowie Backend-, Frontend- und Browser-Tests.
-- Komponentengetriebenes UI-System mit zentralen Design Tokens, AppShell, DICOM-Domänenkomponenten und interner Showcase-Seite.
+- Noch keine Änderungen.
+
+## [0.2.0] - 2026-09-11
+
+### Added
+
+- CRUD-Verwaltung für Modalitätsprofile mit referenzierten MWL- und Store-Zielen.
+- Manueller kombinierter Modalitätscheck mit sicherer MWL-Abfrage, synthetischem C-STORE und getrennten Subresultaten.
+- Diagnostische MWL-Wiederholung ohne Station AE bei null Treffern.
+- Historientyp und Detaildarstellung für Modalitätsprüfungen.
+- REST-Endpunkte, Alembic-Migration sowie Backend-, Frontend- und Browser-Tests für Modalitätsprofile.
+
+### Changed
+
+- Navigation um **Modalitäten** ergänzt und Produktversion auf 0.2.0 angehoben.
+- Ein partieller Fehler ergibt konsistent ein fehlgeschlagenes Gesamtergebnis; erfolgreiche Subchecks bleiben einzeln sichtbar.
+
+## [0.1.1] - 2026-09-11
+
+### Added
+
+- Echter lokaler MWL-C-FIND-Integrationstest für Pending-, Success-, Nulltreffer-, Reject-, Abort-, Failure- und Timeout-Pfade.
+- SOP-spezifische Generatoren für Secondary Capture, CT, MR, Ultrasound, CR und DX.
+- Zwei Full-Stack-Smoke-Tests vom Browser bis zu lokalen MWL- und Storage-SCPs.
+- Eigener CI-Job für die Full-Stack-DICOM-Smoke-Tests.
+- Komponentengetriebenes UI-System mit zentralen Design Tokens und wiederverwendbaren DICOM-Komponenten.
 - Einstellungsseite für lokale UI- und DICOM-Standardwerte.
 
 ### Changed
 
-- Übersicht, Worklist, PACS Store, Ziele und Historie an das professionelle On-Prem-Admin-Layout angepasst.
-- PACS-Store-Ablauf um Transferfortschritt, technisches Log und kompaktes Metadatenpanel erweitert.
+- DICOM-Fehler unterscheiden TCP, Association Reject/Abort, Timeout, Presentation Context, C-FIND und Store-Status präziser.
+- Synthetische Objekte enthalten SOP-spezifische typische Metadaten und bleiben eindeutig als nicht diagnostisch gekennzeichnet.
+- Übersicht, Worklist, PACS Store, Ziele und Historie verwenden ein einheitliches On-Prem-Admin-Layout.
+- PACS Store zeigt Transferfortschritt, technisches Log und Objektmetadaten kompakt an.
 
 ### Fixed
 
-### Removed
-
-### Security
-
-- Upload-Typ und -Größe werden begrenzt; Dateien werden ausschließlich im Speicher verarbeitet.
+- C-STORE-Warnungen werden als angenommene Übertragung mit sichtbarer technischer Warnung behandelt.
 
 ## [0.1.0] - 2026-09-10
 

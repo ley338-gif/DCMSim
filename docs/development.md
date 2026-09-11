@@ -20,8 +20,9 @@ Anwenden: `alembic -c apps/api/alembic.ini upgrade head`. Erstellen: `alembic -c
 - Backend-Tests: `pytest` oder getrennt `pytest apps/api/tests/unit`, `integration`, `dicom`
 - Frontend: `npm run lint`, `npm run typecheck`, `npm test -- --run`, `npm run build`
 - E2E: `npx playwright install chromium`, danach `npm run e2e`
+- Full Stack: `npm run e2e:full-stack` startet FastAPI, temporäres SQLite, React sowie lokale MWL- und Storage-SCPs
 
-Lokale Test-SCPs werden in den DICOM-Tests mit pynetdicom auf dynamisch freien Localhost-Ports gestartet. Docker nutzt dasselbe Image wie die Produktion und ein Volume unter `/data`.
+Lokale Test-SCPs werden in den DICOM-Integrationstests mit pynetdicom auf dynamisch freien Localhost-Ports gestartet. Der Full-Stack-Harness verwendet feste, nur lokal gebundene Testports und eine temporäre Datenbank. Alle Daten sind synthetisch. Docker nutzt dasselbe Image wie die Produktion und ein Volume unter `/data`.
 
 ## Release-Prozess
 

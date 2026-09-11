@@ -4,7 +4,7 @@ from time import monotonic
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import ValidationError
 from pydicom.errors import InvalidDicomError
-from sqlalchemy import desc, select
+from sqlalchemy import desc, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -20,10 +20,13 @@ from app.dicom.datasets import (
 )
 from app.dicom.errors import DicomError
 from app.dicom.network import echo, find_worklist, store_dataset
-from app.models import Target, TestRun
+from app.models import ModalityProfile, Target, TestRun
 from app.schemas.common import (
     EchoRequest,
     Endpoint,
+    ModalityCheckRequest,
+    ModalityProfileCreate,
+    ModalityProfileRead,
     StoreRequest,
     TargetCreate,
     TargetRead,
@@ -31,17 +34,24 @@ from app.schemas.common import (
     WorklistRequest,
 )
 from app.services.history import record_run
+from app.services.modality_checks import run_modality_check
 
 router = APIRouter(prefix="/api")
 
 
 def error_result(exc: DicomError, started: float) -> dict:
-    return {"success": False, "code": exc.code, "message": exc.message, "details": exc.details, "duration_ms": round((monotonic() - started) * 1000)}
+    return {
+        "success": False,
+        "code": exc.code,
+        "message": exc.message,
+        "details": exc.details,
+        "duration_ms": round((monotonic() - started) * 1000),
+    }
 
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": "0.2.0"}
 
 
 @router.get("/targets", response_model=list[TargetRead])
@@ -91,8 +101,98 @@ def delete_target(target_id: int, db: Session = Depends(get_db)):
     target = db.get(Target, target_id)
     if not target:
         raise HTTPException(404, "Target not found")
+    db.execute(
+        update(ModalityProfile)
+        .where(ModalityProfile.mwl_target_id == target_id)
+        .values(mwl_target_id=None)
+    )
+    db.execute(
+        update(ModalityProfile)
+        .where(ModalityProfile.store_target_id == target_id)
+        .values(store_target_id=None)
+    )
     db.delete(target)
     db.commit()
+
+
+def _validate_profile_targets(payload: ModalityProfileCreate, db: Session) -> None:
+    checks = (
+        (payload.mwl_enabled, payload.mwl_target_id, "mwl", "worklist"),
+        (payload.store_enabled, payload.store_target_id, "store", "store"),
+    )
+    for enabled, target_id, attribute, label in checks:
+        if not enabled:
+            continue
+        target = db.get(Target, target_id)
+        if not target:
+            raise HTTPException(422, f"Configured {label} target does not exist")
+        if not getattr(target, f"{attribute}_enabled"):
+            raise HTTPException(422, f"Selected target does not support {label}")
+
+
+@router.get("/modality-profiles", response_model=list[ModalityProfileRead])
+def list_modality_profiles(db: Session = Depends(get_db)):
+    return db.scalars(select(ModalityProfile).order_by(ModalityProfile.name)).all()
+
+
+@router.post("/modality-profiles", response_model=ModalityProfileRead, status_code=201)
+def create_modality_profile(payload: ModalityProfileCreate, db: Session = Depends(get_db)):
+    _validate_profile_targets(payload, db)
+    profile = ModalityProfile(**payload.model_dump())
+    db.add(profile)
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "A modality profile with this name already exists") from exc
+    db.refresh(profile)
+    return profile
+
+
+@router.get("/modality-profiles/{profile_id}", response_model=ModalityProfileRead)
+def get_modality_profile(profile_id: int, db: Session = Depends(get_db)):
+    profile = db.get(ModalityProfile, profile_id)
+    if not profile:
+        raise HTTPException(404, "Modality profile not found")
+    return profile
+
+
+@router.put("/modality-profiles/{profile_id}", response_model=ModalityProfileRead)
+def update_modality_profile(
+    profile_id: int, payload: ModalityProfileCreate, db: Session = Depends(get_db)
+):
+    profile = db.get(ModalityProfile, profile_id)
+    if not profile:
+        raise HTTPException(404, "Modality profile not found")
+    _validate_profile_targets(payload, db)
+    for key, value in payload.model_dump().items():
+        setattr(profile, key, value)
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "A modality profile with this name already exists") from exc
+    db.refresh(profile)
+    return profile
+
+
+@router.delete("/modality-profiles/{profile_id}", status_code=204)
+def delete_modality_profile(profile_id: int, db: Session = Depends(get_db)):
+    profile = db.get(ModalityProfile, profile_id)
+    if not profile:
+        raise HTTPException(404, "Modality profile not found")
+    db.delete(profile)
+    db.commit()
+
+
+@router.post("/modality-profiles/{profile_id}/check")
+def check_modality_profile(
+    profile_id: int, payload: ModalityCheckRequest, db: Session = Depends(get_db)
+):
+    profile = db.get(ModalityProfile, profile_id)
+    if not profile:
+        raise HTTPException(404, "Modality profile not found")
+    return run_modality_check(db, profile, payload.transfer_syntax)
 
 
 @router.post("/dicom/echo")
@@ -112,7 +212,11 @@ def dicom_mwl(payload: WorklistRequest, db: Session = Depends(get_db)):
     query = build_mwl_query(payload.filters.model_dump(), payload.broad)
     try:
         result = find_worklist(endpoint, query)
-        result["active_filters"] = {} if payload.broad else {k: str(v) for k, v in payload.filters.model_dump().items() if v}
+        result["active_filters"] = (
+            {}
+            if payload.broad
+            else {k: str(v) for k, v in payload.filters.model_dump().items() if v}
+        )
         result["broad"] = payload.broad
     except DicomError as exc:
         result = error_result(exc, started)
@@ -130,7 +234,15 @@ def dicom_store_generated(payload: StoreRequest, db: Session = Depends(get_db)):
     except DicomError as exc:
         result = error_result(exc, started)
     result.update(summary)
-    result.update({"sop_class": SOP_LABELS[payload.sop_class], "transfer_syntax": TRANSFER_LABELS[payload.transfer_syntax], "calling_ae": payload.calling_ae, "called_ae": payload.called_ae, "target": f"{payload.host}:{payload.port}"})
+    result.update(
+        {
+            "sop_class": SOP_LABELS[payload.sop_class],
+            "transfer_syntax": TRANSFER_LABELS[payload.transfer_syntax],
+            "calling_ae": payload.calling_ae,
+            "called_ae": payload.called_ae,
+            "target": f"{payload.host}:{payload.port}",
+        }
+    )
     run = record_run(db, "dicom_store", endpoint, result)
     return {**result, "run_id": run.id}
 
@@ -155,10 +267,18 @@ async def analyze_upload(file: UploadFile = File(...)):
 
 @router.post("/dicom/store/upload")
 async def dicom_store_upload(
-    file: UploadFile = File(...), host: str = Form(...), port: int = Form(...), called_ae: str = Form(...), calling_ae: str = Form("DCMSIM"), target_id: int | None = Form(None), db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    host: str = Form(...),
+    port: int = Form(...),
+    called_ae: str = Form(...),
+    calling_ae: str = Form("DCMSIM"),
+    target_id: int | None = Form(None),
+    db: Session = Depends(get_db),
 ):
     try:
-        endpoint = Endpoint(host=host, port=port, called_ae=called_ae, calling_ae=calling_ae, target_id=target_id).model_dump()
+        endpoint = Endpoint(
+            host=host, port=port, called_ae=called_ae, calling_ae=calling_ae, target_id=target_id
+        ).model_dump()
     except ValidationError as exc:
         raise HTTPException(422, exc.errors()) from exc
     started = monotonic()
@@ -189,4 +309,3 @@ def get_run(run_id: int, db: Session = Depends(get_db)):
     if not run:
         raise HTTPException(404, "Test run not found")
     return run
-

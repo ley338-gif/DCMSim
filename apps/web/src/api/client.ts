@@ -4,6 +4,10 @@ export type DicomElement={tag:string;name:string;vr:string;value:string|DicomEle
 export type WorklistEntry={patient_name:string;patient_id:string;birth_date:string;accession_number:string;modality:string;station_ae:string;start_date:string;start_time:string;sps_description:string;requested_procedure_description:string;dataset:DicomElement[]}
 export type Result={success:boolean;status?:string;code?:string;message?:string;duration_ms:number;steps?:string[];count?:number;entries?:WorklistEntry[];active_filters?:Record<string,string>;[key:string]:unknown}
 export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;started_at:string;duration_ms:number;success:boolean;status:string;result_json:Result}
+export type ModalityProfile={id:number;name:string;description:string|null;modality:'CT'|'MR'|'US'|'CR'|'DX'|'OT'|'XA'|'MG'|'NM'|'PT';calling_ae:string;mwl_enabled:boolean;mwl_target_id:number|null;store_enabled:boolean;store_target_id:number|null;created_at:string;updated_at:string}
+export type ModalityProfileDraft=Omit<ModalityProfile,'id'|'created_at'|'updated_at'>
+export type ModalityServiceResult=Result&{skipped?:boolean;association?:boolean;target_name?:string;query?:Record<string,string>;diagnostic_retry?:Result&{without_station_ae?:boolean};observation?:string;sop_class?:string;transfer_syntax?:string;fallback_secondary_capture?:boolean}
+export type ModalityCheckResult=Result&{overall:'success'|'failure';profile_id:number;profile_name:string;modality:string;calling_ae:string;worklist:ModalityServiceResult;store:ModalityServiceResult;run_id:number}
 
 async function request<T>(path:string,init?:RequestInit):Promise<T>{const response=await fetch(`/api${path}`,{...init,headers:init?.body instanceof FormData?init.headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok){const body=await response.json().catch(()=>({detail:response.statusText}));throw new Error(typeof body.detail==='string'?body.detail:JSON.stringify(body.detail))}return response.status===204?undefined as T:response.json()}
 export const api={
@@ -11,6 +15,12 @@ export const api={
   createTarget:(target:Omit<Target,'id'|'created_at'|'updated_at'>)=>request<Target>('/targets',{method:'POST',body:JSON.stringify(target)}),
   updateTarget:(id:number,target:Omit<Target,'id'|'created_at'|'updated_at'>)=>request<Target>(`/targets/${id}`,{method:'PUT',body:JSON.stringify(target)}),
   deleteTarget:(id:number)=>request<void>(`/targets/${id}`,{method:'DELETE'}),
+  modalityProfiles:()=>request<ModalityProfile[]>('/modality-profiles'),
+  modalityProfile:(id:number)=>request<ModalityProfile>(`/modality-profiles/${id}`),
+  createModalityProfile:(profile:ModalityProfileDraft)=>request<ModalityProfile>('/modality-profiles',{method:'POST',body:JSON.stringify(profile)}),
+  updateModalityProfile:(id:number,profile:ModalityProfileDraft)=>request<ModalityProfile>(`/modality-profiles/${id}`,{method:'PUT',body:JSON.stringify(profile)}),
+  deleteModalityProfile:(id:number)=>request<void>(`/modality-profiles/${id}`,{method:'DELETE'}),
+  checkModalityProfile:(id:number,transfer_syntax='explicit_vr_little_endian')=>request<ModalityCheckResult>(`/modality-profiles/${id}/check`,{method:'POST',body:JSON.stringify({transfer_syntax})}),
   echo:(endpoint:Endpoint)=>request<Result>('/dicom/echo',{method:'POST',body:JSON.stringify(endpoint)}),
   mwl:(payload:Endpoint&{broad:boolean;filters:Record<string,string|null>})=>request<Result>('/dicom/mwl',{method:'POST',body:JSON.stringify(payload)}),
   store:(payload:Endpoint&{sop_class:string;transfer_syntax:string})=>request<Result>('/dicom/store/generated',{method:'POST',body:JSON.stringify(payload)}),

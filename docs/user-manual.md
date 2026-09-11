@@ -40,18 +40,34 @@ Der Standard erzeugt `DCMSIM^TEST`, neue UIDs und ein Pixelbild mit „NOT FOR D
 
 Auf **Eigene DICOM-Datei** wechseln und `.dcm`/`.dicom` wählen. Achtung: Sie kann echte Patientendaten enthalten. Die Datei wird nur für den Request im Speicher gehalten und nicht persistiert.
 
-## 10. Historie
+## 10. Modalitätsprofile
+
+Unter **Modalitäten** bildet ein Profil die Konfiguration eines Geräts ab. **Neue Modalität** öffnen, Name, Modalitätscode und Calling AE eintragen und die benötigten Dienste aktivieren. MWL- und Store-Ziel werden aus den bereits unter **Ziele** gepflegten Systemen gewählt; Called AE, Host und Port bleiben deshalb zentral am Ziel gespeichert.
+
+Unterstützt werden zunächst CT, MR, US, CR, DX, OT, XA, MG, NM und PT. Ein Profil kann nur gespeichert werden, wenn mindestens ein Dienst aktiv ist und jeder aktive Dienst ein passendes Ziel besitzt.
+
+## 11. Modalität prüfen
+
+**Modalität prüfen** führt die aktivierten Subchecks nacheinander aus. Worklist fragt zunächst heutiges Datum, Profil-Modalität und Calling AE als Station AE ab. Bei null Treffern testet DCMSim zusätzlich ohne Station AE und zeigt beide Trefferzahlen als technische Beobachtung. Das ist keine Aussage über eine fehlerhafte RIS-Konfiguration.
+
+Der Store-Check erzeugt ein synthetisches Objekt. CT, MR, US, CR und DX verwenden die entsprechende Storage SOP Class; andere Profilmodalitäten verwenden sichtbar gekennzeichnet Secondary Capture. Standard ist Explicit VR Little Endian.
+
+**PASS** bedeutet, dass alle aktivierten Subchecks erfolgreich waren. Schlägt Worklist oder Store fehl, lautet das Gesamtergebnis **FAIL**, während der erfolgreiche Teil weiterhin separat sichtbar bleibt. So ist beispielsweise „Worklist funktioniert, Store nicht“ direkt erkennbar. Unter **Technische Details** stehen Statuscodes, Schritte, SOP Class, Transfer Syntax und die diagnostische Wiederholung.
+
+## 12. Historie
 
 Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
 
-## 11. Technische Details anzeigen
+Der Typ **Modalitätsprüfung** speichert Profilname und beide Subresultate in einem gemeinsamen Lauf. Worklist-Ergebnislisten mit Patientendaten werden dabei nicht in diesen kombinierten Historieneintrag kopiert.
+
+## 13. Technische Details anzeigen
 
 Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetails. Monospace-Felder sind direkt für den Abgleich mit PACS/RIS-Konfigurationen gedacht.
 
-## 12. Häufige Fehler
+## 14. Häufige Fehler
 
-`DICOM_CONNECTION_FAILED` deutet auf Host, Port oder Netzwerk hin. `DICOM_ASSOCIATION_REJECTED` verlangt Prüfung der AE Titles und Freischaltung. `DICOM_NO_PRESENTATION_CONTEXT` bedeutet, dass SOP Class und Transfer Syntax nicht akzeptiert wurden. Weitere Schritte: [Troubleshooting](troubleshooting.md).
+`TCP_CONNECTION_FAILED` deutet auf Host, Port oder Netzwerk hin. `DICOM_ASSOCIATION_REJECTED` verlangt Prüfung der AE Titles und Freischaltung. `DICOM_ASSOCIATION_ABORTED` bezeichnet einen Abbruch der Association. `DICOM_TIMEOUT` bedeutet, dass innerhalb der Frist keine finale Antwort kam. `DICOM_NO_PRESENTATION_CONTEXT` bedeutet, dass SOP Class und Transfer Syntax nicht akzeptiert wurden. Weitere Schritte: [Troubleshooting](troubleshooting.md).
 
-## 13. Einstellungen
+## 15. Einstellungen
 
 Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung vormerken. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.
