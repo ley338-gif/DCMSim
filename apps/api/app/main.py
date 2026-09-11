@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -9,12 +8,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 from app.core.config import settings
+from app.core.logging import configure_logging
 from app.db.base import Base
 from app.db.session import engine
 
-logging.basicConfig(
-    level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s"
-)
+configure_logging(settings.log_level)
 
 
 @asynccontextmanager
@@ -23,7 +21,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="DCMSim API", version="0.3.2", lifespan=lifespan)
+app = FastAPI(title="DCMSim API", version="0.3.3", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
