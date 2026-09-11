@@ -6,7 +6,7 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 ### Added
 
-- Noch keine Änderungen.
+- Echter Full-Stack-Smoke-Test für den vollständigen Modalitätsworkflow von Ziel- und Profilerstellung bis zur gespeicherten kombinierten Prüfung.
 
 ## [0.2.0] - 2026-09-11
 
