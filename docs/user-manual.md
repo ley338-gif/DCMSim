@@ -4,6 +4,8 @@
 
 DCMSim prüft aus Sicht einer Modalität, ob ein Worklist- oder PACS-Endpunkt erreichbar und korrekt konfiguriert ist. Es ist ein Diagnosewerkzeug, kein klinischer Viewer.
 
+Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zeigt alle konfigurierten Dienste sowie die Verteilung und die letzten Ergebnisse von Worklist-, Store-, Query/Retrieve- und Modalitätsprüfungen.
+
 ## 2. Begriffe
 
 - **Calling AE** ist der Name, mit dem DCMSim auftritt; **Called AE** ist der konfigurierte Name der Gegenstelle.
