@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
 
 from app.core.config import settings
+from app.core.dates import as_utc
 from app.db.session import get_db
 from app.dicom.datasets import (
     SOP_LABELS,
@@ -81,7 +82,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.13"}
+    return {"status": "ok", "version": "0.3.14"}
 
 
 @router.get("/ready")
@@ -90,7 +91,7 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.13"}
+    return {"status": "ready", "version": "0.3.14"}
 
 
 @router.get("/configuration/export")
@@ -471,7 +472,7 @@ def export_runs_csv(
         target_name = endpoint.get("name") or run.result_json.get("target_name") or (run.target.name if run.target else "")
         writer.writerow(
             [
-                run.started_at.isoformat(),
+                as_utc(run.started_at).isoformat(),
                 run.test_type,
                 csv_cell(profile_name or target_name),
                 csv_cell(endpoint.get("host", "")),
