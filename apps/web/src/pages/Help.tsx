@@ -24,7 +24,7 @@ export function Help(){
    </SectionCard>
   </div>
   <SectionCard title="Sicherer Betrieb und Grenzen">
-   <AlertBox tone="warning">DCMSim hat keine Benutzeranmeldung. Nur in einem vertrauenswürdigen internen Netz betreiben und den Zugang über die Infrastruktur begrenzen.</AlertBox>
+   <AlertBox tone="warning">DCMSim hat keine Benutzeranmeldung. Docker gibt die Anwendung standardmäßig nur auf diesem Rechner frei. Netzwerkzugriff nur bewusst und mit geeigneter Zugangssicherung einrichten.</AlertBox>
    <div className="help-facts">
     <p>Hochgeladene DICOM-Dateien können Patientendaten enthalten. Sie werden flüchtig verarbeitet; die Testhistorie speichert nur datensparsame technische Angaben.</p>
     <p>Unterstützt werden C-ECHO, Modality Worklist C-FIND, Study Root C-FIND auf Studienebene und C-STORE. C-MOVE, C-GET, Storage Commitment und ein produktiver Storage SCP sind nicht enthalten.</p>

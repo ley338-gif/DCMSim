@@ -8,6 +8,8 @@ Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zei
 
 Über **Hilfe** in der Kopfzeile öffnet sich der integrierte Schnellstart mit Erläuterungen zu Zielstatus, Fehlerdiagnose, Datenschutz und unterstützten DICOM-Diensten. **Test-Historie** führt direkt zu den bisherigen Testläufen. Der Hinweis **Ohne Anmeldung** ist wichtig: DCMSim besitzt im MVP keine Benutzerkonten und darf nur in einem vertrauenswürdigen internen Netz betrieben werden.
 
+Beim Docker-Start ist Port 8080 standardmäßig nur auf `127.0.0.1` des Host-Rechners erreichbar. Ein Zugriff aus dem Netzwerk erfordert eine bewusste Anpassung von `DCMSIM_PUBLISH_HOST` und eine geeignete Zugangssicherung durch die Infrastruktur; DCMSim selbst bietet keine Anmeldung.
+
 ## 2. Begriffe
 
 - **Calling AE** ist der Name, mit dem DCMSim auftritt; **Called AE** ist der konfigurierte Name der Gegenstelle.

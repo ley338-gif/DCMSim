@@ -8,6 +8,15 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.10] - 2026-09-12
+
+### Changed
+
+- Docker Compose veröffentlicht Port 8080 standardmäßig nur auf `127.0.0.1` statt auf allen Host-Schnittstellen.
+- Netzwerkzugriff erfordert eine explizite private Host-Adresse über `DCMSIM_PUBLISH_HOST` und eigene Zugangssicherung.
+- Integrierte Hilfe, Betriebsdokumentation und CI-Prüfungen erklären und überprüfen diesen Sicherheitsstandard.
+- Produktversion auf 0.3.10 angehoben.
+
 ## [0.3.9] - 2026-09-12
 
 ### Added
