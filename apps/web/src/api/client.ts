@@ -8,6 +8,7 @@ export type Result={success:boolean;status?:string;code?:string;message?:string;
 export type StudyQueryResult={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:StudyEntry[];active_filters?:Record<string,string>;run_id?:number}
 export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;target_snapshot_json?:Endpoint&{name?:string}|null;started_at:string;duration_ms:number;success:boolean;status:string;result_json:Result}
 export type HistoryPage={items:Run[];total:number;limit:number;offset:number}
+export type DashboardSummary={today_total:number;today_success:number;by_type:Record<string,number>}
 export type HistoryFilters={test_type?:string;success?:boolean;search?:string;limit?:number;offset?:number}
 export type ModalityProfile={id:number;name:string;description:string|null;modality:'CT'|'MR'|'US'|'CR'|'DX'|'OT'|'XA'|'MG'|'NM'|'PT';calling_ae:string;mwl_enabled:boolean;mwl_target_id:number|null;store_enabled:boolean;store_target_id:number|null;created_at:string;updated_at:string}
 export type ModalityProfileDraft=Omit<ModalityProfile,'id'|'created_at'|'updated_at'>
@@ -37,7 +38,8 @@ export const api={
   store:(payload:Endpoint&{sop_class:string;transfer_syntax:string})=>request<Result>('/dicom/store/generated',{method:'POST',body:JSON.stringify(payload)}),
   analyzeUpload:(data:FormData)=>request<Record<string,string>>('/dicom/store/analyze',{method:'POST',body:data}),
   storeUpload:(data:FormData)=>request<Result>('/dicom/store/upload',{method:'POST',body:data}),
-  runs:()=>request<Run[]>('/test-runs'),run:(id:string)=>request<Run>(`/test-runs/${id}`),
+  runs:()=>request<Run[]>('/test-runs?limit=6'),run:(id:string)=>request<Run>(`/test-runs/${id}`),
+  dashboardSummary:(dayStart:string,dayEnd:string)=>request<DashboardSummary>(`/dashboard/summary${queryString({day_start:dayStart,day_end:dayEnd})}`),
   history:(filters:HistoryFilters)=>request<HistoryPage>(`/test-runs/search${queryString(filters)}`),
   exportHistory:(filters:HistoryFilters)=>requestBlob(`/test-runs/export.csv${queryString(filters)}`),
   exportConfiguration:()=>request<ConfigurationExport>('/configuration/export'),

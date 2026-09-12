@@ -8,6 +8,18 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.13] - 2026-09-12
+
+### Fixed
+
+- Dashboard-Kennzahlen für heutige Tests, Erfolgsquote und Testverteilung einschließlich C-ECHO werden über die gesamte Historie serverseitig aggregiert und bleiben bei mehr als 100 Einträgen korrekt.
+- Der heutige Zeitraum folgt den lokalen Tagesgrenzen des Browsers; die API verlangt eindeutige Zeitzonenangaben und begrenzt den Zeitraum.
+
+### Changed
+
+- Die Übersicht lädt für die Tabelle nur noch die sechs letzten Testläufe.
+- Produktversion auf 0.3.13 angehoben.
+
 ## [0.3.12] - 2026-09-12
 
 ### Added
