@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.16] - 2026-09-12
+
+### Fixed
+
+- PACS-Studienergebnisse und der Detaildialog werden beim Ändern von Ziel oder Filtern sofort ausgeblendet. Verspätete Antworten einer älteren Abfrage erscheinen nicht unter neuen Suchkriterien.
+
+### Changed
+
+- Die PACS-Suche hält patientenbezogene Antwortdaten nur im aktuellen Seitenzustand und nicht zusätzlich im Mutation-Cache des Browsers.
+- Produktversion auf 0.3.16 angehoben.
+
 ## [0.3.15] - 2026-09-12
 
 ### Fixed
