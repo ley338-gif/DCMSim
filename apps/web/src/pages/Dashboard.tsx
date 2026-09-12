@@ -2,6 +2,7 @@ import {useQuery} from '@tanstack/react-query'
 import {Activity,ArrowRight,CheckCircle2,Clock3,ListChecks,Network,Search,Server,Target,UploadCloud} from 'lucide-react'
 import {Link} from 'react-router-dom'
 import {api,Run,Target as DicomTarget} from '../api/client'
+import {TargetTestStatus} from '../components/dicom/TargetTestStatus'
 import {PageHeader} from '../components/layout/PageHeader'
 import {Button} from '../components/ui/Button'
 import {SectionCard} from '../components/ui/Card'
@@ -16,8 +17,10 @@ const runDetails=(run:Run)=>['mwl_find','qr_find'].includes(run.test_type)?`${ru
 export function Dashboard(){
  const targets=useQuery({queryKey:['targets'],queryFn:api.targets})
  const runs=useQuery({queryKey:['runs'],queryFn:api.runs})
+ const targetStatuses=useQuery({queryKey:['target-statuses'],queryFn:api.targetStatuses,staleTime:0})
  const allTargets=targets.data??[]
  const allRuns=runs.data??[]
+ const statusByTarget=new Map((targetStatuses.data??[]).map(status=>[status.target_id,status]))
  const todayKey=new Date().toDateString()
  const today=allRuns.filter(run=>new Date(run.started_at).toDateString()===todayKey)
  const success=today.length?Math.round(today.filter(run=>run.success).length/today.length*100):0
@@ -28,12 +31,12 @@ export function Dashboard(){
   {key:'port',header:'Port',className:'mono',render:t=>t.mwl_port??t.store_port??t.qr_port??'—'},
   {key:'ae',header:'Called AE',className:'mono',render:t=>t.mwl_called_ae??t.store_called_ae??t.qr_called_ae??'—'},
   {key:'services',header:'Dienste',render:t=>[t.mwl_enabled?'MWL':'',t.store_enabled?'Store':'',t.qr_enabled?'PACS-Suche':''].filter(Boolean).join(', ')||'—'},
-  {key:'status',header:'Status',render:()=> <StatusBadge tone="success">Konfiguriert</StatusBadge>},
+  {key:'status',header:'Letzter Einzeltest',render:t=><TargetTestStatus status={statusByTarget.get(t.id)}/>},
  ]
  const runColumns:Column<Run>[]=[
   {key:'time',header:'Zeit',render:r=>new Date(r.started_at).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})},
   {key:'type',header:'Typ',render:r=>typeLabel(r.test_type)},
-  {key:'target',header:'Ziel',className:'mono',render:r=>r.test_type==='modality_check'?String(r.result_json.profile_name??'Modalitätsprofil'):r.manual_target_json?.host??(r.target_id?`Ziel #${r.target_id}`:'—')},
+  {key:'target',header:'Ziel',className:'mono',render:r=>r.test_type==='modality_check'?String(r.result_json.profile_name??'Modalitätsprofil'):String(r.result_json.target_name??r.manual_target_json?.host??(r.target_id?`Ziel #${r.target_id}`:'—'))},
   {key:'status',header:'Status',render:r=><StatusBadge tone={r.success?'success':'error'}>{r.success?'Erfolgreich':'Fehler'}</StatusBadge>},
   {key:'details',header:'Details',render:runDetails},
  ]

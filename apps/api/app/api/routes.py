@@ -40,12 +40,13 @@ from app.schemas.common import (
     StudyQueryRequest,
     TargetCreate,
     TargetRead,
+    TargetTestStatusRead,
     TestRunPage,
     TestRunRead,
     WorklistRequest,
 )
 from app.services.diagnostics import recommendation_for
-from app.services.history import query_history, record_run
+from app.services.history import latest_target_test_statuses, query_history, record_run
 from app.services.modality_checks import run_modality_check
 from app.services.operations import (
     create_sqlite_backup,
@@ -75,7 +76,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.5"}
+    return {"status": "ok", "version": "0.3.6"}
 
 
 @router.get("/configuration/export")
@@ -108,6 +109,11 @@ def database_backup(db: Session = Depends(get_db)):
 @router.get("/targets", response_model=list[TargetRead])
 def list_targets(db: Session = Depends(get_db)):
     return db.scalars(select(Target).order_by(Target.name)).all()
+
+
+@router.get("/targets/test-status", response_model=list[TargetTestStatusRead])
+def target_test_status(db: Session = Depends(get_db)):
+    return latest_target_test_statuses(db)
 
 
 @router.post("/targets", response_model=TargetRead, status_code=201)

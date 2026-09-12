@@ -19,6 +19,8 @@ Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zei
 
 Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Port, Called AE und Default Calling AE setzen. Worklist, Store und PACS-Suche können unterschiedliche Ports oder Called AEs verwenden. Gespeicherte Ziele erscheinen in den Testformularen; manuelle Eingabe bleibt immer möglich.
 
+Der Zielstatus zeigt den letzten direkt zugeordneten Einzeltest mit Ergebnis und Zeitpunkt. Ohne einen solchen Lauf steht dort **Ungeprüft**. Ein gespeichertes Ziel kann über **Bearbeiten → Verbindung testen** gezielt geprüft werden. Eine kombinierte Modalitätsprüfung kann unterschiedliche Ziele verwenden und wird deshalb weiterhin separat in der Historie dargestellt.
+
 ## 4. Worklist testen
 
 Endpunkt auswählen oder manuell eingeben. Datum ist auf heute vorbelegt. Modalität, Station AE, Patient ID, Accession Number und Patient Name sind optional. **Worklist abfragen** startet die Association und C-FIND.

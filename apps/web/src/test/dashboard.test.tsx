@@ -16,6 +16,7 @@ afterEach(()=>vi.restoreAllMocks())
 it('integrates PACS query targets and runs across the dashboard',async()=>{
  vi.spyOn(api,'targets').mockResolvedValue([target])
  vi.spyOn(api,'runs').mockResolvedValue(runs)
+ vi.spyOn(api,'targetStatuses').mockResolvedValue([{target_id:1,run_id:3,test_type:'dicom_echo',started_at:new Date().toISOString(),duration_ms:50,success:false,status:'DICOM_TIMEOUT'}])
  render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><Dashboard/></MemoryRouter></QueryClientProvider>)
  expect(await screen.findByText('PACS Archiv')).toBeVisible()
  expect(screen.getByText('PACSQR')).toBeVisible()
@@ -27,4 +28,5 @@ it('integrates PACS query targets and runs across the dashboard',async()=>{
  expect(screen.getByText('PASS')).toBeVisible()
  expect(screen.getByText('CT Notaufnahme')).toBeVisible()
  expect(screen.getByText('Query/Retrieve-Ziele')).toBeVisible()
+ expect(screen.getByText('Fehlgeschlagen')).toBeVisible()
 })
