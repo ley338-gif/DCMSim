@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.14] - 2026-09-12
+
+### Fixed
+
+- API und Historien-CSV kennzeichnen gespeicherte UTC-Zeitstempel ausdrücklich mit Zeitzone, auch wenn SQLite diese Information beim Lesen entfernt. Browser zeigen damit lokale Uhrzeiten korrekt an.
+- Worklist und PACS-Suche verwenden beim Öffnen der Seite den lokalen Kalendertag statt des UTC-Datums als vorbelegten Filter.
+
+### Changed
+
+- Produktversion auf 0.3.14 angehoben.
+
 ## [0.3.13] - 2026-09-12
 
 ### Fixed

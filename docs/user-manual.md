@@ -8,6 +8,8 @@ Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zei
 
 „Tests heute“ und Erfolgsquote beziehen sich auf den lokalen Kalendertag des Browsers; die Testverteilung zählt alle gespeicherten Läufe. Die Tabelle zeigt dagegen bewusst nur die jüngsten Tests. Die Kennzahlen sind keine automatische DICOM-Überwachung.
 
+Zeitpunkte in Übersicht und Historie werden aus eindeutig gekennzeichneten UTC-Zeitstempeln in die lokale Browserzeit umgerechnet. Die Datumsfilter für Worklist und PACS-Suche sind beim Öffnen mit dem lokalen heutigen Datum vorbelegt und können jederzeit geändert werden.
+
 Über **Hilfe** in der Kopfzeile öffnet sich der integrierte Schnellstart mit Erläuterungen zu Zielstatus, Fehlerdiagnose, Datenschutz und unterstützten DICOM-Diensten. **Test-Historie** führt direkt zu den bisherigen Testläufen. Der Hinweis **Ohne Anmeldung** ist wichtig: DCMSim besitzt im MVP keine Benutzerkonten und darf nur in einem vertrauenswürdigen internen Netz betrieben werden.
 
 Beim Docker-Start ist Port 8080 standardmäßig nur auf `127.0.0.1` des Host-Rechners erreichbar. Ein Zugriff aus dem Netzwerk erfordert eine bewusste Anpassung von `DCMSIM_PUBLISH_HOST` und eine geeignete Zugangssicherung durch die Infrastruktur; DCMSim selbst bietet keine Anmeldung.

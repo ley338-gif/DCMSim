@@ -12,17 +12,17 @@ import {DateInput,FormField,Select,TextInput} from '../components/ui/Form'
 import {Modal} from '../components/ui/Overlay'
 import {StatusBadge} from '../components/ui/Status'
 import {loadLocalSettings} from '../settings/localSettings'
+import {localDateString} from '../utils/dates'
 
-const today=new Date().toISOString().slice(0,10)
 const blankEndpoint=():Endpoint=>({host:'',port:104,called_ae:'',calling_ae:loadLocalSettings().callingAe})
-const blankFilters={patient_name:'',patient_id:'',accession_number:'',study_date:today,modality:''}
+const blankFilters={patient_name:'',patient_id:'',accession_number:'',study_date:'',modality:''}
 
 function DicomTree({items}:{items:DicomElement[]}){return <div className="dicom-tree">{items.map((item,index)=><div className="dicom-element" key={`${item.tag}-${index}`}><span>{item.tag}</span><b>{item.name}</b><code>{Array.isArray(item.value)?JSON.stringify(item.value):item.value||'—'}</code></div>)}</div>}
 
 export function StudyQuery(){
  const {data:targets=[]}=useQuery({queryKey:['targets'],queryFn:api.targets})
  const [endpoint,setEndpoint]=useState<Endpoint>(blankEndpoint)
- const [filters,setFilters]=useState(blankFilters)
+ const [filters,setFilters]=useState(()=>({...blankFilters,study_date:localDateString()}))
  const [selected,setSelected]=useState<StudyEntry>()
  const mutation=useMutation({mutationFn:()=>api.studies({
   ...endpoint,

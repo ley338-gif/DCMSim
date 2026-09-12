@@ -7,6 +7,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.core.dates import as_utc
+
 AE_RE = re.compile(r"^[A-Z0-9 _.-]{1,16}$", re.IGNORECASE)
 HOST_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,253}$")
 
@@ -80,6 +82,8 @@ class TargetRead(TargetBase):
     created_at: datetime
     updated_at: datetime
 
+    _utc_timestamps = field_validator("created_at", "updated_at")(as_utc)
+
 
 ModalityCode = Literal["CT", "MR", "US", "CR", "DX", "OT", "XA", "MG", "NM", "PT"]
 
@@ -114,6 +118,8 @@ class ModalityProfileRead(ModalityProfileBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+    _utc_timestamps = field_validator("created_at", "updated_at")(as_utc)
 
 
 class ModalityProfileImport(BaseModel):
@@ -211,6 +217,8 @@ class TestRunRead(BaseModel):
     status: str
     result_json: dict[str, Any]
 
+    _utc_timestamp = field_validator("started_at")(as_utc)
+
 
 class TestRunPage(BaseModel):
     items: list[TestRunRead]
@@ -228,3 +236,5 @@ class TargetTestStatusRead(BaseModel):
     success: bool
     status: str
     configuration_state: Literal["current", "changed", "unknown"]
+
+    _utc_timestamp = field_validator("started_at")(as_utc)
