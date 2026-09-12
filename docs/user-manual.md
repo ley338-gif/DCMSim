@@ -83,7 +83,7 @@ Während des Checks kann die Browseranzeige abgebrochen werden. Der bereits gest
 
 Unter **PACS-Suche** einen Query/Retrieve-Endpunkt auswählen und mindestens ein Kriterium verwenden. Das heutige Studiendatum ist sicher vorbelegt; alternativ sind Patientenname, Patient ID, Accession Number und Modalität möglich. **Studien suchen** führt Study Root C-FIND auf Level `STUDY` aus. Ein Klick auf eine Zeile öffnet die vollständige DICOM-Antwort. DCMSim führt dabei weder C-MOVE noch C-GET aus.
 
-Patienten- und Studiendaten werden nur in der aktuellen Antwort angezeigt. Die Historie speichert für diesen Test lediglich technischen Status, Dauer und Trefferzahl.
+Patienten- und Studiendaten werden nur in der aktuellen Antwort angezeigt. Sobald Ziel oder Filter geändert werden, verschwinden alte Treffer und der Detaildialog; eine neue Suche ist nötig. Auch eine verspätete Antwort auf die bisherige Eingabe wird nicht als Treffer der neuen Kriterien angezeigt. Die Historie speichert für diesen Test lediglich technischen Status, Dauer und Trefferzahl.
 
 ## 13. Historie
 
