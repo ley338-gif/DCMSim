@@ -13,7 +13,7 @@ function wrapper(children:React.ReactNode){return <QueryClientProvider client={n
 
 afterEach(()=>{vi.restoreAllMocks();localStorage.clear()})
 
-it('normalizes invalid locally stored values',()=>{localStorage.setItem('dcmsim-settings',JSON.stringify({callingAe:'invalid ae title that is too long',retention:-1,compact:'yes'}));expect(loadLocalSettings()).toEqual(expect.objectContaining({callingAe:'DCMSIM',retention:90,compact:false}))})
+it('normalizes invalid locally stored values and ignores obsolete server settings',()=>{localStorage.setItem('dcmsim-settings',JSON.stringify({callingAe:'invalid ae title that is too long',retention:-1,compact:'yes',connectTimeout:1,logLevel:'DEBUG'}));expect(loadLocalSettings()).toEqual({callingAe:'DCMSIM',retention:90,compact:false})})
 
 it('uses the saved Calling AE for manual tests and new configuration',async()=>{
  localStorage.setItem('dcmsim-settings',JSON.stringify({callingAe:'LOCAL_AET'}))

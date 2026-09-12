@@ -26,7 +26,7 @@ Das React-Frontend besteht aus drei wiederverwendbaren Ebenen:
 
 Farb-, Abstands-, Typografie-, Radius-, Shadow-, Control- und Z-Index-Tokens liegen zentral unter `src/theme/tokens.css`. Feature-Seiten orchestrieren die Bausteine und greifen über `src/api/client.ts` auf die REST-API zu. Loading-, Empty-, Success-, Warning- und Error-Zustände sind Teil der Komponenten. Unter `/dev/ui` existiert eine interne, nicht navigierte Showcase-Seite.
 
-Lokale Benutzerstandards werden validiert im Browser gespeichert. Das Frontend liest sie ausschließlich als Vorgaben für neue Formulare und Darstellungsoptionen; gespeicherte Ziele und Profile behalten ihre eigenen Werte. Serverseitige DICOM-Timeouts und Logging bleiben Container-Konfiguration und werden nicht durch Browserwerte überschrieben.
+Lokale Benutzerstandards werden validiert im Browser gespeichert. Das Frontend liest sie ausschließlich als Vorgaben für neue Formulare und Darstellungsoptionen; gespeicherte Ziele und Profile behalten ihre eigenen Werte. Serverseitige DICOM-Timeouts und Logging bleiben Container-Konfiguration und werden nicht durch Browserwerte überschrieben. Compose reicht die vier zugehörigen `DCMSIM_`-Variablen an den Container weiter. Ein schmaler, nur lesbarer API-Endpunkt zeigt die tatsächlich geladenen Werte, aber keine Datenbankadresse oder weiteren Konfigurationsgeheimnisse.
 
 ## Datenflüsse
 

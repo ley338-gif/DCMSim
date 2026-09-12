@@ -75,6 +75,8 @@ jobs:
         run: docker compose config --format json | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["dcmsim"]["ports"]; assert len(ports)==1 and ports[0]["host_ip"]=="127.0.0.1"'
       - name: Verify explicit private-host override
         run: DCMSIM_PUBLISH_HOST=192.0.2.10 docker compose config --format json | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["dcmsim"]["ports"]; assert len(ports)==1 and ports[0]["host_ip"]=="192.0.2.10"'
+      - name: Verify runtime settings reach the container
+        run: DCMSIM_CONNECT_TIMEOUT=7.5 DCMSIM_ASSOCIATION_TIMEOUT=12 DCMSIM_DIMSE_TIMEOUT=30 DCMSIM_LOG_LEVEL=WARNING docker compose config --format json | python3 -c 'import json,sys; env=json.load(sys.stdin)["services"]["dcmsim"]["environment"]; assert {key:env[key] for key in ("DCMSIM_CONNECT_TIMEOUT","DCMSIM_ASSOCIATION_TIMEOUT","DCMSIM_DIMSE_TIMEOUT","DCMSIM_LOG_LEVEL")} == {"DCMSIM_CONNECT_TIMEOUT":"7.5","DCMSIM_ASSOCIATION_TIMEOUT":"12","DCMSIM_DIMSE_TIMEOUT":"30","DCMSIM_LOG_LEVEL":"WARNING"}'
       - run: docker build -t dcmsim:ci .
       - name: Verify container readiness
         run: |

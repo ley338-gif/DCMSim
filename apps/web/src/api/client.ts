@@ -16,6 +16,7 @@ export type ModalityServiceResult=Result&{skipped?:boolean;association?:boolean;
 export type ModalityCheckResult=Result&{overall:'success'|'failure';profile_id:number;profile_name:string;modality:string;calling_ae:string;worklist:ModalityServiceResult;store:ModalityServiceResult;run_id:number}
 export type ConfigurationExport={format_version:1;exported_at?:string;targets:Array<Omit<Target,'id'|'created_at'|'updated_at'>>;modality_profiles:Array<{name:string;description:string|null;modality:ModalityProfile['modality'];calling_ae:string;mwl_enabled:boolean;mwl_target_name:string|null;store_enabled:boolean;store_target_name:string|null}>}
 export type ImportSummary={created_targets:number;updated_targets:number;created_profiles:number;updated_profiles:number}
+export type RuntimeSettings={connect_timeout:number;association_timeout:number;dimse_timeout:number;log_level:string}
 
 async function request<T>(path:string,init?:RequestInit):Promise<T>{const response=await fetch(`/api${path}`,{...init,headers:init?.body instanceof FormData?init.headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok){const body=await response.json().catch(()=>({detail:response.statusText}));throw new Error(typeof body.detail==='string'?body.detail:JSON.stringify(body.detail))}return response.status===204?undefined as T:response.json()}
 async function requestBlob(path:string):Promise<Blob>{const response=await fetch(`/api${path}`);if(!response.ok)throw new Error(response.statusText);return response.blob()}
@@ -46,4 +47,5 @@ export const api={
   importConfiguration:(configuration:ConfigurationExport)=>request<ImportSummary>('/configuration/import',{method:'POST',body:JSON.stringify(configuration)}),
   purgeHistory:(days:number)=>request<{deleted_count:number;cutoff:string}>('/maintenance/history-retention',{method:'POST',body:JSON.stringify({days})}),
   databaseBackup:()=>requestBlob('/maintenance/database-backup'),
+  runtimeSettings:()=>request<RuntimeSettings>('/settings/runtime'),
 }
