@@ -8,6 +8,19 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.18] - 2026-09-12
+
+### Fixed
+
+- C-ECHO wird im PACS Store getrennt vom C-STORE-Transfer angezeigt und kann keinen vermeintlichen erfolgreichen C-STORE mehr auslösen.
+- Änderungen an Ziel, SOP Class, Transfer Syntax, Testmodus oder Datei entfernen alte Transferresultate; verspätete Antworten werden nicht zur neuen Eingabe angezeigt.
+- Verspätete Analyseantworten bereits entfernter oder ersetzter DICOM-Dateien erscheinen nicht mehr. Ohne ausgewählte Datei werden keine synthetischen Patientendaten im Upload-Modus vorgetäuscht.
+
+### Changed
+
+- C-STORE-Antworten bleiben ausschließlich im aktuellen Seitenzustand statt zusätzlich im Browser-Mutation-Cache.
+- Produktversion auf 0.3.18 angehoben.
+
 ## [0.3.17] - 2026-09-12
 
 ### Fixed

@@ -19,7 +19,7 @@ def test_readiness_checks_database(tmp_path):
         with TestClient(app) as client:
             response = client.get("/api/ready")
             assert response.status_code == 200
-            assert response.json() == {"status": "ready", "version": "0.3.17"}
+            assert response.json() == {"status": "ready", "version": "0.3.18"}
     finally:
         app.dependency_overrides.clear()
         engine.dispose()

@@ -51,7 +51,7 @@ Worklist-Treffer und verwendete Suchfilter sind nur in der unmittelbaren Antwort
 
 ## 7. PACS Store testen
 
-Unter **PACS Store** Endpunkt, SOP Class und Transfer Syntax wählen. **C-STORE senden** zeigt ausgehandelten Ablauf, Statuscode und UIDs.
+Unter **PACS Store** Endpunkt, SOP Class und Transfer Syntax wählen. **Verbindung testen** zeigt ein eigenes C-ECHO-Ergebnis und ist noch kein C-STORE. **C-STORE senden** zeigt ausgehandelten Ablauf, Statuscode und UIDs. Nach Änderungen an Ziel, Testmodus, SOP Class, Transfer Syntax oder Datei verschwinden alte Transferresultate; ein neuer Test ist erforderlich.
 
 ## 8. Synthetisches DICOM-Testobjekt
 
@@ -61,7 +61,7 @@ Der Standard erzeugt `DCMSIM^TEST`, neue UIDs und ein Pixelbild mit „NOT FOR D
 
 Auf **Eigene DICOM-Datei** wechseln und `.dcm`/`.dicom` wählen. Achtung: Sie kann echte Patientendaten enthalten. Die Datei wird nur für den Request im Speicher gehalten und nicht persistiert.
 
-Patientenname und Patient-ID aus der Datei erscheinen während des aktuellen Tests in der Metadatenansicht, werden aber nicht in der Testhistorie gespeichert.
+Patientenname und Patient-ID aus der Datei erscheinen während des aktuellen Tests in der Metadatenansicht, werden aber nicht in der Testhistorie gespeichert. Beim Entfernen oder Wechseln der Datei verschwinden alte Metadaten sofort, auch wenn eine frühere Dateianalyse verspätet antwortet.
 
 ## 10. Modalitätsprofile
 
