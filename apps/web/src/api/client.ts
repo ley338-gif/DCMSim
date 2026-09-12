@@ -6,6 +6,8 @@ export type StudyEntry={patient_name:string;patient_id:string;accession_number:s
 export type Result={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:WorklistEntry[];active_filters?:Record<string,string>;[key:string]:unknown}
 export type StudyQueryResult={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:StudyEntry[];active_filters?:Record<string,string>;run_id?:number}
 export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;started_at:string;duration_ms:number;success:boolean;status:string;result_json:Result}
+export type HistoryPage={items:Run[];total:number;limit:number;offset:number}
+export type HistoryFilters={test_type?:string;success?:boolean;search?:string;limit?:number;offset?:number}
 export type ModalityProfile={id:number;name:string;description:string|null;modality:'CT'|'MR'|'US'|'CR'|'DX'|'OT'|'XA'|'MG'|'NM'|'PT';calling_ae:string;mwl_enabled:boolean;mwl_target_id:number|null;store_enabled:boolean;store_target_id:number|null;created_at:string;updated_at:string}
 export type ModalityProfileDraft=Omit<ModalityProfile,'id'|'created_at'|'updated_at'>
 export type ModalityServiceResult=Result&{skipped?:boolean;association?:boolean;target_name?:string;query?:Record<string,string>;diagnostic_retry?:Result&{without_station_ae?:boolean};observation?:string;sop_class?:string;transfer_syntax?:string;fallback_secondary_capture?:boolean}
@@ -15,6 +17,7 @@ export type ImportSummary={created_targets:number;updated_targets:number;created
 
 async function request<T>(path:string,init?:RequestInit):Promise<T>{const response=await fetch(`/api${path}`,{...init,headers:init?.body instanceof FormData?init.headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok){const body=await response.json().catch(()=>({detail:response.statusText}));throw new Error(typeof body.detail==='string'?body.detail:JSON.stringify(body.detail))}return response.status===204?undefined as T:response.json()}
 async function requestBlob(path:string):Promise<Blob>{const response=await fetch(`/api${path}`);if(!response.ok)throw new Error(response.statusText);return response.blob()}
+function queryString(values:Record<string,string|number|boolean|undefined>){const params=new URLSearchParams();Object.entries(values).forEach(([key,value])=>{if(value!==undefined&&value!=='')params.set(key,String(value))});const query=params.toString();return query?`?${query}`:''}
 export const api={
   targets:()=>request<Target[]>('/targets'),
   createTarget:(target:Omit<Target,'id'|'created_at'|'updated_at'>)=>request<Target>('/targets',{method:'POST',body:JSON.stringify(target)}),
@@ -33,6 +36,8 @@ export const api={
   analyzeUpload:(data:FormData)=>request<Record<string,string>>('/dicom/store/analyze',{method:'POST',body:data}),
   storeUpload:(data:FormData)=>request<Result>('/dicom/store/upload',{method:'POST',body:data}),
   runs:()=>request<Run[]>('/test-runs'),run:(id:string)=>request<Run>(`/test-runs/${id}`),
+  history:(filters:HistoryFilters)=>request<HistoryPage>(`/test-runs/search${queryString(filters)}`),
+  exportHistory:(filters:HistoryFilters)=>requestBlob(`/test-runs/export.csv${queryString(filters)}`),
   exportConfiguration:()=>request<ConfigurationExport>('/configuration/export'),
   importConfiguration:(configuration:ConfigurationExport)=>request<ImportSummary>('/configuration/import',{method:'POST',body:JSON.stringify(configuration)}),
   purgeHistory:(days:number)=>request<{deleted_count:number;cutoff:string}>('/maintenance/history-retention',{method:'POST',body:JSON.stringify({days})}),

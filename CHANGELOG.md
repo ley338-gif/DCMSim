@@ -8,6 +8,20 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.4] - 2026-09-12
+
+### Added
+
+- Paginierte serverseitige Historienabfrage mit Filtern für Testtyp, Erfolg und technische Freitextfelder.
+- CSV-Export der aktuell gefilterten Historie mit UTF-8-Kodierung und Schutz vor Tabellenformeln.
+- Backend- und Frontend-Regressionstests für Filterung, Pagination und datensparsamen Export.
+
+### Changed
+
+- Die Historienseite lädt jeweils höchstens 50 Testläufe und zeigt die Gesamtzahl sowie Vor-/Zurück-Navigation an.
+- Der CSV-Export enthält ausschließlich technische Historienfelder und keine Worklist- oder PACS-Trefferlisten.
+- Produktversion auf 0.3.4 angehoben.
+
 ## [0.3.3] - 2026-09-12
 
 ### Added

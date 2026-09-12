@@ -1,10 +1,12 @@
+import csv
+import io
 import os
 from datetime import datetime
 from pathlib import Path
 from time import monotonic
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 from pydicom.errors import InvalidDicomError
 from sqlalchemy import desc, select, update
@@ -38,11 +40,12 @@ from app.schemas.common import (
     StudyQueryRequest,
     TargetCreate,
     TargetRead,
+    TestRunPage,
     TestRunRead,
     WorklistRequest,
 )
 from app.services.diagnostics import recommendation_for
-from app.services.history import record_run
+from app.services.history import query_history, record_run
 from app.services.modality_checks import run_modality_check
 from app.services.operations import (
     create_sqlite_backup,
@@ -72,7 +75,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.3"}
+    return {"status": "ok", "version": "0.3.4"}
 
 
 @router.get("/configuration/export")
@@ -372,6 +375,90 @@ async def dicom_store_upload(
 def list_runs(limit: int = 100, db: Session = Depends(get_db)):
     limit = min(max(limit, 1), 500)
     return db.scalars(select(TestRun).order_by(desc(TestRun.started_at)).limit(limit)).all()
+
+
+@router.get("/test-runs/search", response_model=TestRunPage)
+def search_runs(
+    test_type: str | None = None,
+    success: bool | None = None,
+    search: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    limit = min(max(limit, 1), 200)
+    offset = max(offset, 0)
+    items, total = query_history(
+        db,
+        test_type=test_type,
+        success=success,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+    return {"items": items, "total": total, "limit": limit, "offset": offset}
+
+
+def csv_cell(value: object) -> object:
+    if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+    return value
+
+
+@router.get("/test-runs/export.csv")
+def export_runs_csv(
+    test_type: str | None = None,
+    success: bool | None = None,
+    search: str | None = None,
+    db: Session = Depends(get_db),
+):
+    items, _ = query_history(
+        db,
+        test_type=test_type,
+        success=success,
+        search=search,
+        limit=None,
+    )
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";", lineterminator="\n")
+    writer.writerow(
+        [
+            "Zeitpunkt",
+            "Testtyp",
+            "Ziel oder Profil",
+            "Host",
+            "Calling AE",
+            "Called AE",
+            "Erfolgreich",
+            "Status",
+            "Dauer ms",
+            "Treffer",
+        ]
+    )
+    for run in items:
+        manual = run.manual_target_json or {}
+        profile_name = run.result_json.get("profile_name", "")
+        target_name = run.target.name if run.target else ""
+        writer.writerow(
+            [
+                run.started_at.isoformat(),
+                run.test_type,
+                csv_cell(profile_name or target_name),
+                csv_cell(manual.get("host", "")),
+                csv_cell(manual.get("calling_ae", "")),
+                csv_cell(manual.get("called_ae", "")),
+                "ja" if run.success else "nein",
+                csv_cell(run.status),
+                run.duration_ms,
+                run.result_json.get("count", ""),
+            ]
+        )
+    filename = f"dcmsim-history-{datetime.now():%Y%m%d-%H%M%S}.csv"
+    return Response(
+        content="\ufeff" + output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/test-runs/{run_id}", response_model=TestRunRead)

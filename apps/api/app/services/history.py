@@ -1,12 +1,59 @@
 import logging
+from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any
 
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.models import TestRun
+from app.models import Target, TestRun
 
 logger = logging.getLogger("dcmsim.tests")
+
+
+def history_filters(
+    test_type: str | None = None,
+    success: bool | None = None,
+    search: str | None = None,
+) -> list[Any]:
+    filters: list[Any] = []
+    if test_type:
+        filters.append(TestRun.test_type == test_type)
+    if success is not None:
+        filters.append(TestRun.success == success)
+    if search and (term := search.strip()):
+        pattern = f"%{term}%"
+        filters.append(
+            or_(
+                TestRun.status.ilike(pattern),
+                TestRun.test_type.ilike(pattern),
+                Target.name.ilike(pattern),
+                cast(TestRun.manual_target_json, String).ilike(pattern),
+                cast(TestRun.result_json["profile_name"], String).ilike(pattern),
+            )
+        )
+    return filters
+
+
+def query_history(
+    db: Session,
+    *,
+    test_type: str | None = None,
+    success: bool | None = None,
+    search: str | None = None,
+    limit: int | None = 50,
+    offset: int = 0,
+) -> tuple[Sequence[TestRun], int]:
+    filters = history_filters(test_type, success, search)
+    base = select(TestRun).outerjoin(Target).where(*filters)
+    total = db.scalar(
+        select(func.count()).select_from(TestRun).outerjoin(Target).where(*filters)
+    ) or 0
+    query = base.order_by(TestRun.started_at.desc(), TestRun.id.desc()).offset(offset)
+    if limit is not None:
+        query = query.limit(limit)
+    items = db.scalars(query).all()
+    return items, total
 
 
 def sanitize_history_result(test_type: str, result: dict[str, Any]) -> dict[str, Any]:
