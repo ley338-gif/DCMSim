@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.12] - 2026-09-12
+
+### Added
+
+- Docker-CI prüft per echtem C-ECHO vom Anwendungscontainer zu einem separaten Test-SCP, dass ausgehende DICOM-Verbindungen trotz lokaler Web-Portbindung funktionieren.
+- Hilfe und Betriebsdokumentation erklären, dass `127.0.0.1` als DICOM-Ziel im Container nur den Container selbst bezeichnet.
+
+### Changed
+
+- Produktversion auf 0.3.12 angehoben.
+
 ## [0.3.11] - 2026-09-12
 
 ### Added

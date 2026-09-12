@@ -10,6 +10,8 @@ Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zei
 
 Beim Docker-Start ist Port 8080 standardmäßig nur auf `127.0.0.1` des Host-Rechners erreichbar. Ein Zugriff aus dem Netzwerk erfordert eine bewusste Anpassung von `DCMSIM_PUBLISH_HOST` und eine geeignete Zugangssicherung durch die Infrastruktur; DCMSim selbst bietet keine Anmeldung.
 
+Diese Einschränkung betrifft nur eingehende Aufrufe der Oberfläche. DICOM-Tests verbinden sich weiterhin ausgehend mit den konfigurierten Zielen. Bei Docker bezeichnet `127.0.0.1` als DICOM-Ziel den DCMSim-Container selbst; für PACS/RIS auf dem Host oder im Netzwerk eine vom Container erreichbare Adresse verwenden.
+
 Docker zeigt den Container als gesund an, wenn Webdienst und lokale Datenbank antworten. Das prüft keine DICOM-Gegenstelle. Deren Erreichbarkeit wird erst durch einen ausdrücklich gestarteten Test wie C-ECHO geprüft.
 
 ## 2. Begriffe

@@ -2,7 +2,7 @@
 
 DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.3.11
+## Funktionen in 0.3.12
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -29,6 +29,7 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - integrierte Hilfe und ehrlicher Kopfbereich ohne vorgetäuschte Anmeldung oder Benachrichtigungen
 - Docker veröffentlicht die Oberfläche standardmäßig nur auf dem eigenen Rechner
 - Docker meldet den Container erst dann als bereit, wenn Webdienst und lokale Datenbank antworten
+- CI prüft eine echte ausgehende DICOM-Verbindung vom Anwendungscontainer zu einem getrennten Testziel
 
 ## Start mit Docker
 
@@ -43,6 +44,8 @@ DCMSim ist unter `http://localhost:8080` erreichbar. Docker bindet den Host-Port
 `/api/health` bestätigt, dass der Webdienst antwortet. `/api/ready` prüft zusätzlich die lokale Datenbank; Docker verwendet diese Bereitschaftsprüfung für seinen Containerstatus. Eine erfolgreiche Prüfung ist kein DICOM-Verbindungstest zu einem Ziel.
 
 Für bewusst abgesicherten Netzwerkzugriff kann `DCMSIM_PUBLISH_HOST` in einer lokalen `.env` auf eine private IP-Adresse des Host-Rechners gesetzt werden. Das ändert nur die Docker-Portfreigabe und fügt **keine Anmeldung** hinzu. Eine öffentliche Freigabe ohne vorgeschaltete Zugangssicherung ist nicht vorgesehen.
+
+Die Portbindung der Weboberfläche begrenzt keine ausgehenden DICOM-Verbindungen. Als DICOM-Ziel muss aus dem Container eine erreichbare Adresse eingetragen werden: `127.0.0.1` zeigt dort auf den Container selbst, nicht auf den Docker-Host oder ein anderes PACS.
 
 ## Lokale Entwicklung
 

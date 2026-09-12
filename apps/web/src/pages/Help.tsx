@@ -28,6 +28,7 @@ export function Help(){
    <div className="help-facts">
     <p>Hochgeladene DICOM-Dateien können Patientendaten enthalten. Sie werden flüchtig verarbeitet; die Testhistorie speichert nur datensparsame technische Angaben.</p>
     <p>Unterstützt werden C-ECHO, Modality Worklist C-FIND, Study Root C-FIND auf Studienebene und C-STORE. C-MOVE, C-GET, Storage Commitment und ein produktiver Storage SCP sind nicht enthalten.</p>
+    <p>Die lokale Docker-Portbindung betrifft nur die Weboberfläche. DICOM-Ziele bleiben ausgehend erreichbar; als Zieladresse zeigt <code>127.0.0.1</code> im Container allerdings auf DCMSim selbst.</p>
    </div>
   </SectionCard>
  </>

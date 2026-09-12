@@ -54,6 +54,8 @@ Zeigt der automatische Versuch ohne Station AE Treffer, ist die Worklist grunds�
 
 Firewall, Routing, falschen Port und Antwortzeit der Gegenstelle pr체fen. DCMSim begrenzt Connect-, Association- und DIMSE-Wartezeiten, damit Tests nicht h채ngen.
 
+Bei Docker zeigt ein DICOM-Ziel `127.0.0.1` auf den DCMSim-Container selbst. F체r ein PACS im Netzwerk dessen vom Container erreichbare IP oder DNS-Adresse verwenden. Die lokale Bindung der Weboberfl채che an `127.0.0.1:8080` blockiert ausgehendes DICOM nicht. Zus채tzlich Quell-IP, Firewall und AE-Freigabe der Gegenstelle pr체fen.
+
 ## PACS erreichbar, Bild aber nicht auffindbar
 
 Study-, Series- und SOP-UID aus dem Testergebnis kopieren und im PACS-Log suchen. Patient ID beginnt mit `DCMSIM-`; Study Description ist `PACS STORE TEST`. Importregeln, Quarant채ne und Modalit채tsfilter des PACS pr체fen.
