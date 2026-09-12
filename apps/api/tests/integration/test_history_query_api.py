@@ -31,8 +31,8 @@ def test_history_search_paginates_and_filters_server_side(tmp_path):
         record_run(
             db,
             "dicom_store",
-            {"target_id": target.id},
-            {"success": True, "status": "0x0000", "duration_ms": 12},
+            {"target_id": target.id, "host": "127.0.0.1", "port": 11112, "called_ae": "PACS", "calling_ae": "DCMSIM"},
+            {"success": True, "status": "0x0000", "duration_ms": 12, "target_name": "PACS Radiologie"},
         )
         record_run(
             db,
@@ -40,6 +40,9 @@ def test_history_search_paginates_and_filters_server_side(tmp_path):
             {"host": "10.20.30.40", "port": 104, "called_ae": "ARCHIVE", "calling_ae": "DCMSIM"},
             {"success": False, "code": "DICOM_TIMEOUT", "duration_ms": 25},
         )
+        target.name = "Umbenanntes Ziel"
+        target.host = "192.0.2.2"
+        db.commit()
 
     def session_override():
         with factory() as database:
@@ -60,6 +63,16 @@ def test_history_search_paginates_and_filters_server_side(tmp_path):
             target_match = client.get("/api/test-runs/search?search=Radiologie").json()
             assert target_match["total"] == 1
             assert target_match["items"][0]["test_type"] == "dicom_store"
+            snapshot = target_match["items"][0]["target_snapshot_json"]
+            assert snapshot == {"name": "PACS Radiologie", "host": "127.0.0.1", "port": 11112, "called_ae": "PACS", "calling_ae": "DCMSIM"}
+            assert client.get(f"/api/test-runs/{target_match['items'][0]['id']}").json()["target_snapshot_json"] == snapshot
+            csv = client.get("/api/test-runs/export.csv").text
+            assert "PACS Radiologie;127.0.0.1;DCMSIM;PACS" in csv
+            assert "Umbenanntes Ziel" not in csv
+            assert client.delete(f"/api/targets/{target.id}").status_code == 204
+            deleted_target_run = client.get(f"/api/test-runs/{target_match['items'][0]['id']}").json()
+            assert deleted_target_run["target_id"] is None
+            assert deleted_target_run["target_snapshot_json"] == snapshot
 
             host_match = client.get("/api/test-runs/search?search=10.20.30.40").json()
             assert host_match["total"] == 1

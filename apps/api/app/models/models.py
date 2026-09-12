@@ -65,6 +65,7 @@ class TestRun(Base):
     test_type: Mapped[str] = mapped_column(String(32), index=True)
     target_id: Mapped[int | None] = mapped_column(ForeignKey("targets.id", ondelete="SET NULL"))
     manual_target_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    target_snapshot_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
