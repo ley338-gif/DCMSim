@@ -88,6 +88,21 @@ def test_import_rejects_unknown_referenced_target(client):
     assert test_client.get("/api/targets").json() == []
 
 
+@pytest.mark.parametrize("collection", ["targets", "modality_profiles"])
+def test_import_rejects_duplicate_names_without_changing_existing_configuration(client, collection):
+    test_client, _, _ = client
+    assert test_client.post("/api/configuration/import", json=configuration()).status_code == 200
+    before = test_client.get("/api/configuration/export").json()
+    payload = configuration()
+    payload["targets"][0]["host"] = "changed.local"
+    payload[collection].append(payload[collection][0].copy())
+    response = test_client.post("/api/configuration/import", json=payload)
+    assert response.status_code == 422
+    after = test_client.get("/api/configuration/export").json()
+    assert after["targets"] == before["targets"]
+    assert after["modality_profiles"] == before["modality_profiles"]
+
+
 def test_history_retention_only_removes_old_runs(client):
     test_client, factory, _ = client
     with factory() as database:

@@ -58,3 +58,20 @@ test('history date range applies to list and CSV export',async({page})=>{
  expect(exportParams.get('started_from')).toBe(listParams.get('started_from'))
  expect(exportParams.get('started_before')).toBe(listParams.get('started_before'))
 })
+
+test('configuration import requires an explicit review before overwriting a target',async({page})=>{
+ const target={name:'JiveX',host:'pacs.local',mwl_enabled:true,mwl_port:104,mwl_called_ae:'JIVEXWL',store_enabled:false,store_port:null,store_called_ae:null,qr_enabled:false,qr_port:null,qr_called_ae:null,default_calling_ae:'DCMSIM'}
+ const payload={format_version:1,targets:[{...target,host:'new-pacs.local'}],modality_profiles:[]}
+ let importCalls=0
+ await page.route('**/api/configuration/export',route=>route.fulfill({json:{format_version:1,targets:[target],modality_profiles:[]}}))
+ await page.route('**/api/configuration/import',route=>{importCalls++;return route.fulfill({json:{created_targets:0,updated_targets:1,created_profiles:0,updated_profiles:0}})})
+ await page.goto('/settings')
+ await page.getByRole('button',{name:'Datensicherung'}).click()
+ await page.getByLabel('Konfigurationsdatei auswählen').setInputFiles({name:'config.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(payload))})
+ const dialog=page.getByRole('dialog',{name:'Konfigurationsimport prüfen'})
+ await expect(dialog).toContainText('JiveX')
+ expect(importCalls).toBe(0)
+ await dialog.getByRole('button',{name:'Import bestätigen'}).click()
+ await expect.poll(()=>importCalls).toBe(1)
+ await expect(page.getByText(/1 Ziele und 0 Profile aktualisiert/)).toBeVisible()
+})

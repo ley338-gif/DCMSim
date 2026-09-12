@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.21] - 2026-09-12
+
+### Fixed
+
+- Die Auswahl einer Konfigurationsdatei startet keinen überschreibenden Import mehr. Eine Vorschau nennt neue und gleichnamige bestehende Ziele und Profile; erst die Bestätigung führt den Import aus.
+- Importdateien mit doppelten Ziel- oder Profilnamen werden mit einem Validierungsfehler abgewiesen, ohne bestehende Konfiguration zu verändern.
+
+### Changed
+
+- Produktversion auf 0.3.21 angehoben.
+
 ## [0.3.20] - 2026-09-12
 
 ### Added
