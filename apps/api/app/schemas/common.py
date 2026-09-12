@@ -150,6 +150,14 @@ class ConfigurationImport(BaseModel):
     targets: list[TargetCreate]
     modality_profiles: list[ModalityProfileImport]
 
+    @model_validator(mode="after")
+    def unique_names(self):
+        for kind, items in (("target", self.targets), ("modality profile", self.modality_profiles)):
+            names = [item.name for item in items]
+            if len(names) != len(set(names)):
+                raise ValueError(f"Duplicate {kind} names in configuration")
+        return self
+
 
 class HistoryRetentionRequest(BaseModel):
     days: int = Field(ge=1, le=3650)
