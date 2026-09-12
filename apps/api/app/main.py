@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="DCMSim API", version="0.3.8", lifespan=lifespan)
+app = FastAPI(title="DCMSim API", version="0.3.9", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],

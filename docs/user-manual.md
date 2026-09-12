@@ -6,6 +6,8 @@ DCMSim prüft aus Sicht einer Modalität, ob ein Worklist- oder PACS-Endpunkt er
 
 Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zeigt alle konfigurierten Dienste sowie die Verteilung und die letzten Ergebnisse von Worklist-, Store-, Query/Retrieve- und Modalitätsprüfungen.
 
+Über **Hilfe** in der Kopfzeile öffnet sich der integrierte Schnellstart mit Erläuterungen zu Zielstatus, Fehlerdiagnose, Datenschutz und unterstützten DICOM-Diensten. **Test-Historie** führt direkt zu den bisherigen Testläufen. Der Hinweis **Ohne Anmeldung** ist wichtig: DCMSim besitzt im MVP keine Benutzerkonten und darf nur in einem vertrauenswürdigen internen Netz betrieben werden.
+
 ## 2. Begriffe
 
 - **Calling AE** ist der Name, mit dem DCMSim auftritt; **Called AE** ist der konfigurierte Name der Gegenstelle.
