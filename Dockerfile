@@ -16,5 +16,6 @@ COPY apps/api/alembic.ini ./alembic.ini
 COPY apps/api/alembic ./apps/api/alembic
 RUN mkdir -p /data
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/ready', timeout=3).close()"
 CMD ["sh", "-c", "alembic -c apps/api/alembic.ini upgrade head && uvicorn app.main:app --app-dir apps/api --host 0.0.0.0 --port 8080"]
 

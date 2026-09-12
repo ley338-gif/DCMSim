@@ -12,6 +12,8 @@ Frontend und Backend sind im Quellcode getrennt, werden im Container jedoch als 
 
 Docker Compose veröffentlicht den Container-Port standardmäßig nur auf der IPv4-Loopback-Adresse des Hosts (`127.0.0.1:8080`). `DCMSIM_PUBLISH_HOST` kann für einen bewusst abgesicherten Netzwerkzugriff auf eine private Host-Adresse gesetzt werden. Der Prozess im Container lauscht weiterhin auf `0.0.0.0`, damit die Portweiterleitung funktioniert; daraus folgt keine Veröffentlichung auf allen Host-Schnittstellen. DCMSim selbst bietet keine Authentifizierung.
 
+`/api/health` ist eine reine Liveness-Prüfung des Webdienstes. `/api/ready` führt zusätzlich eine Datenbankabfrage aus und liefert bei Datenbankfehlern HTTP 503 ohne interne Fehlerdetails. Docker verwendet Readiness als Healthcheck. Weder Liveness noch Readiness baut eine DICOM-Verbindung zu gespeicherten Zielen auf.
+
 ## Frontend-Architektur und Designsystem
 
 Das React-Frontend besteht aus drei wiederverwendbaren Ebenen:
@@ -33,6 +35,8 @@ Der aktuelle Browser erhält Trefferlisten und eingegebene Filter nur als unmitt
 Die zentrale Logging-Konfiguration trennt Anwendungsereignisse von DICOM-Bibliotheksausgaben. `dcmsim.tests` protokolliert Endpunkt, AE Titles, Dauer, Ergebnis und Fehlerklasse; die Logger von pydicom und pynetdicom beginnen bei `WARNING`, damit deren ausführliche INFO-/DEBUG-Dataset-Dumps nicht in reguläre Container-Logs gelangen.
 
 Die PACS-Suche verwendet das Study Root Query/Retrieve Information Model auf Level `STUDY`. Mindestens ein Filter verhindert unbeabsichtigte unbeschränkte Abfragen. Antwort-Datasets werden nur an den aktuellen Browser geliefert; die Historie speichert Status, Dauer und Trefferzahl, aber weder Patientenresultate noch patientenbezogene Suchfilter. C-MOVE und C-GET sind getrennte, nicht implementierte Dienste.
+
+Ein mögliches späteres C-MOVE wäre keine Erweiterung der HTTP-Portfreigabe: Ein Storage-SCP mit eigener AE und eingehendem DICOM-Port, PACS-seitigem Routing zur Move Destination, expliziter Netzwerk-/Firewall-Freigabe sowie Regeln für Patientendaten, Lebensdauer und Zugriff müssten separat entworfen und getestet werden. Die aktuelle Installation öffnet dafür keinen Listener.
 
 Beim Store-Test erzeugt der Server ein gültiges monochromes Testobjekt mit neuen Study-, Series- und SOP-UIDs oder liest einen Upload aus dem Arbeitsspeicher. SOP Class und Transfer Syntax bilden genau einen angeforderten Presentation Context. Die C-STORE-Antwort und Objektidentifikatoren landen in der Historie.
 
