@@ -8,6 +8,19 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.9] - 2026-09-12
+
+### Added
+
+- Integrierte Hilfeseite mit Schnellstart, Statusdeutung, Fehlersuche, Datenschutz und DICOM-Grenzen.
+- Direkte Wege von der Kopfzeile zu Hilfe und Testhistorie; das Logo führt zur Übersicht.
+- Browser-Regressionstests für die neue Navigation und den sichtbaren Hinweis auf den Betrieb ohne Anmeldung.
+
+### Changed
+
+- Entfernt funktionslose Benachrichtigungs- und vermeintliche Admin-Bedienelemente. Die Kopfzeile zeigt stattdessen den tatsächlichen unauthentifizierten Betrieb an.
+- Produktversion auf 0.3.9 angehoben.
+
 ## [0.3.8] - 2026-09-12
 
 ### Added
