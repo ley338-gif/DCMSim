@@ -1,5 +1,5 @@
 export type Target={id:number;name:string;host:string;mwl_enabled:boolean;mwl_port:number|null;mwl_called_ae:string|null;store_enabled:boolean;store_port:number|null;store_called_ae:string|null;qr_enabled?:boolean;qr_port?:number|null;qr_called_ae?:string|null;default_calling_ae:string;created_at:string;updated_at:string}
-export type TargetTestStatus={target_id:number;run_id:number;test_type:string;started_at:string;duration_ms:number;success:boolean;status:string}
+export type TargetTestStatus={target_id:number;run_id:number;test_type:string;started_at:string;duration_ms:number;success:boolean;status:string;configuration_state:'current'|'changed'|'unknown'}
 export type Endpoint={host:string;port:number;called_ae:string;calling_ae:string;target_id?:number|null}
 export type DicomElement={tag:string;name:string;vr:string;value:string|DicomElement[][]}
 export type WorklistEntry={patient_name:string;patient_id:string;birth_date:string;accession_number:string;modality:string;station_ae:string;start_date:string;start_time:string;sps_description:string;requested_procedure_description:string;dataset:DicomElement[]}

@@ -227,3 +227,4 @@ class TargetTestStatusRead(BaseModel):
     duration_ms: int
     success: bool
     status: str
+    configuration_state: Literal["current", "changed", "unknown"]

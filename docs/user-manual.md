@@ -21,6 +21,8 @@ Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Por
 
 Der Zielstatus zeigt den letzten direkt zugeordneten Einzeltest mit Ergebnis und Zeitpunkt. Ohne einen solchen Lauf steht dort **Ungeprüft**. Ein gespeichertes Ziel kann über **Bearbeiten → Verbindung testen** gezielt geprüft werden. Eine kombinierte Modalitätsprüfung kann unterschiedliche Ziele verwenden und wird deshalb weiterhin separat in der Historie dargestellt.
 
+Wenn Host, verwendeter Dienst-Port, Called AE, Default Calling AE oder der verwendete Dienst seit dem Test geändert wurden, erscheint **Erneut prüfen** statt eines veralteten Erfolgs oder Fehlers. Eine reine Namensänderung ändert den technischen Prüfstatus nicht. Bei älteren Tests ohne gespeicherte Ziel-Momentaufnahme steht **Nicht belegbar**; nach einem neuen Einzeltest erscheint wieder ein aktuelles Ergebnis.
+
 ## 4. Worklist testen
 
 Endpunkt auswählen oder manuell eingeben. Datum ist auf heute vorbelegt. Modalität, Station AE, Patient ID, Accession Number und Patient Name sind optional. **Worklist abfragen** startet die Association und C-FIND.

@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any
 
 from sqlalchemy import String, cast, func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models import Target, TestRun
 
@@ -57,6 +57,38 @@ def query_history(
     return items, total
 
 
+def target_configuration_state(run: TestRun) -> str:
+    """Decide whether the latest run proves the target's *current* endpoint."""
+    snapshot = run.target_snapshot_json
+    target = run.target
+    if not snapshot or not target:
+        return "unknown"
+    if any(snapshot.get(key) is None for key in ("host", "port", "called_ae", "calling_ae")):
+        return "unknown"
+
+    services = {
+        "mwl_find": ("mwl",),
+        "qr_find": ("qr",),
+        "dicom_store": ("store",),
+        "dicom_echo": ("mwl", "store", "qr"),
+    }.get(run.test_type)
+    if not services:
+        return "unknown"
+
+    if str(snapshot["host"]).casefold() != target.host.casefold():
+        return "changed"
+    if snapshot["calling_ae"] != target.default_calling_ae:
+        return "changed"
+    for service in services:
+        if (
+            getattr(target, f"{service}_enabled")
+            and snapshot["port"] == getattr(target, f"{service}_port")
+            and snapshot["called_ae"] == getattr(target, f"{service}_called_ae")
+        ):
+            return "current"
+    return "changed"
+
+
 def latest_target_test_statuses(db: Session) -> list[dict[str, Any]]:
     latest_ids = (
         select(TestRun.target_id, func.max(TestRun.id).label("run_id"))
@@ -64,7 +96,11 @@ def latest_target_test_statuses(db: Session) -> list[dict[str, Any]]:
         .group_by(TestRun.target_id)
         .subquery()
     )
-    runs = db.scalars(select(TestRun).join(latest_ids, TestRun.id == latest_ids.c.run_id)).all()
+    runs = db.scalars(
+        select(TestRun)
+        .join(latest_ids, TestRun.id == latest_ids.c.run_id)
+        .options(joinedload(TestRun.target))
+    ).all()
     return [
         {
             "target_id": run.target_id,
@@ -74,6 +110,7 @@ def latest_target_test_statuses(db: Session) -> list[dict[str, Any]]:
             "duration_ms": run.duration_ms,
             "success": run.success,
             "status": run.status,
+            "configuration_state": target_configuration_state(run),
         }
         for run in runs
         if run.target_id is not None
