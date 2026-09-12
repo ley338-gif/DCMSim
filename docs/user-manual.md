@@ -47,7 +47,7 @@ Endpunkt auswählen oder manuell eingeben. Datum ist auf heute vorbelegt. Modali
 
 Die Ergebniszeile trennt TCP, Association, C-FIND, Dauer und Trefferzahl. Ein Tabellenklick öffnet das komplette DICOM Dataset inklusive Scheduled Procedure Step Sequence. Bei null Treffern zeigen Schnellaktionen, ob Station AE oder Modalität zu restriktiv war.
 
-Worklist-Treffer und verwendete Suchfilter sind nur in der unmittelbaren Antwort sichtbar. Die Historie speichert davon ausschließlich technische Kennzahlen wie Status, Dauer und Trefferzahl.
+Worklist-Treffer und verwendete Suchfilter sind nur in der unmittelbaren Antwort sichtbar. Bei einer Änderung von Ziel oder Filtern verschwinden alte Treffer und der Detaildialog; eine neue Abfrage ist nötig. Eine verspätete Antwort zur bisherigen Eingabe wird nicht als Ergebnis der neuen Kriterien angezeigt. Die Historie speichert davon ausschließlich technische Kennzahlen wie Status, Dauer und Trefferzahl.
 
 ## 7. PACS Store testen
 

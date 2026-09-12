@@ -30,7 +30,7 @@ Lokale Benutzerstandards werden validiert im Browser gespeichert. Das Frontend l
 
 ## Datenflüsse
 
-Beim Worklist-Test validiert FastAPI den Endpunkt, baut ein pydicom-Query-Dataset und öffnet synchron eine begrenzte pynetdicom-Association. Pending-C-FIND-Antworten werden in Tabellenfelder und eine rekursive technische Darstellung übersetzt. Das Abschlussresultat wird in `test_runs` gespeichert.
+Beim Worklist-Test validiert FastAPI den Endpunkt, baut ein pydicom-Query-Dataset und öffnet synchron eine begrenzte pynetdicom-Association. Pending-C-FIND-Antworten werden in Tabellenfelder und eine rekursive technische Darstellung übersetzt. Patientenbezogene Treffer liegen nur im Seitenzustand, nicht im Browser-Mutation-Cache. Ziel- oder Filteränderungen verwerfen die Anzeige und den Detaildialog; verspätete Antworten werden anhand einer Abfragekennung ignoriert. Ein bereits gestarteter DICOM-Lauf kann auf dem Server noch regulär enden. Das datensparsame technische Abschlussresultat wird in `test_runs` gespeichert.
 
 Der aktuelle Browser erhält Trefferlisten und eingegebene Filter nur als unmittelbare Request-Antwort. Die zentrale Historiengrenze entfernt sie vor jeder Persistenz. Bei C-STORE bleiben technische UIDs und Aushandlungsdaten erhalten, während Patientenname und Patient-ID nicht gespeichert werden. Migration `0004` wendet dieselben Regeln irreversibel auf bereits vorhandene Historieneinträge an.
 

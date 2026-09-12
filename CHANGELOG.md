@@ -8,6 +8,18 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.17] - 2026-09-12
+
+### Fixed
+
+- Worklist-Treffer und geöffnete DICOM-Details verschwinden bei Ziel- oder Filteränderungen. Verspätete Antworten früherer Abfragen erscheinen nicht mehr zu neuen Eingaben.
+- Diagnose-Wiederholungen ohne Station AE beziehungsweise Modalität verwenden den aktualisierten Filtersatz und können nicht unkontrolliert parallel zur laufenden Abfrage gestartet werden.
+
+### Changed
+
+- Patientenbezogene Worklist-Antworten liegen nur im aktuellen Seitenzustand statt zusätzlich im Browser-Mutation-Cache.
+- Produktversion auf 0.3.17 angehoben.
+
 ## [0.3.16] - 2026-09-12
 
 ### Fixed
