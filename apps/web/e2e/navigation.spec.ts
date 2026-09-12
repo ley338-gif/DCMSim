@@ -39,3 +39,22 @@ test('settings show effective server values without editable placeholders',async
 
 test('dashboard shows measured target status instead of assuming availability',async({page})=>{const target={id:1,name:'PACS Archiv',host:'127.0.0.1',mwl_enabled:false,mwl_port:null,mwl_called_ae:null,store_enabled:true,store_port:104,store_called_ae:'PACS',qr_enabled:false,qr_port:null,qr_called_ae:null,default_calling_ae:'DCMSIM',created_at:'',updated_at:''};await page.route('**/api/targets',route=>route.fulfill({json:[target]}));await page.route('**/api/targets/test-status',route=>route.fulfill({json:[{target_id:1,run_id:9,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:20,success:false,status:'DICOM_TIMEOUT',configuration_state:'current'}]}));await page.goto('/');const targetRow=page.getByText('PACS Archiv').locator('xpath=ancestor::tr');await expect(targetRow).toContainText('Fehlgeschlagen');await expect(targetRow).not.toContainText('Konfiguriert')})
 test('changed target configuration requires a new test',async({page})=>{const target={id:1,name:'PACS Archiv',host:'127.0.0.1',mwl_enabled:false,store_enabled:true,store_port:104,store_called_ae:'PACS',qr_enabled:false,default_calling_ae:'DCMSIM',created_at:'',updated_at:''};await page.route('**/api/targets',route=>route.fulfill({json:[target]}));await page.route('**/api/targets/test-status',route=>route.fulfill({json:[{target_id:1,run_id:9,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:20,success:true,status:'0x0000',configuration_state:'changed'}]}));await page.goto('/targets');const targetRow=page.getByText('PACS Archiv').locator('xpath=ancestor::tr');await expect(targetRow).toContainText('Erneut prüfen');await expect(targetRow).not.toContainText('Erfolgreich')})
+
+test('history date range applies to list and CSV export',async({page})=>{
+ let listUrl=''
+ let exportUrl=''
+ await page.route('**/api/test-runs/search*',route=>{listUrl=route.request().url();return route.fulfill({json:{items:[{id:1,test_type:'dicom_echo',target_id:null,manual_target_json:{host:'127.0.0.1',port:104,called_ae:'PACS',calling_ae:'DCMSIM'},started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',result_json:{success:true}}],total:1,limit:50,offset:0}})})
+ await page.route('**/api/test-runs/export.csv*',route=>{exportUrl=route.request().url();return route.fulfill({contentType:'text/csv',body:'Zeitpunkt;Status\n2026-09-12;0x0000'})})
+ await page.goto('/history')
+ await page.getByLabel('Von').fill('2026-09-12')
+ await page.getByLabel('Bis').fill('2026-09-12')
+ await expect.poll(()=>listUrl?new URL(listUrl).searchParams.get('started_before'):null).toBeTruthy()
+ const listParams=new URL(listUrl).searchParams
+ expect(listParams.get('started_from')).toBeTruthy()
+ const downloadPromise=page.waitForEvent('download')
+ await page.getByRole('button',{name:'CSV exportieren'}).click()
+ await downloadPromise
+ const exportParams=new URL(exportUrl).searchParams
+ expect(exportParams.get('started_from')).toBe(listParams.get('started_from'))
+ expect(exportParams.get('started_before')).toBe(listParams.get('started_before'))
+})

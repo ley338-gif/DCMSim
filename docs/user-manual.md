@@ -91,7 +91,7 @@ Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Fre
 
 Seit Version 0.3.7 speichert jeder neue Einzeltest die beim Test tatsächlich verwendeten technischen Zielangaben (Name, Host, Port und AE-Titel). Änderungen an einem gespeicherten Ziel verändern frühere Historieneinträge nicht. Bei älteren Einträgen ohne diese Momentaufnahme können technische Felder fehlen; fehlende Werte werden nicht aus der heutigen Zielkonfiguration rekonstruiert.
 
-Filter und Freitextsuche werden serverseitig ausgeführt. Die Ansicht zeigt 50 Einträge pro Seite und bleibt dadurch auch bei einer längeren lokalen Nutzung übersichtlich. **CSV exportieren** lädt genau die aktuell gefilterten technischen Historienfelder herunter. Der Export enthält keine Worklist- oder PACS-Trefferlisten und keine patientenbezogenen Suchfilter.
+Filter und Freitextsuche werden serverseitig ausgeführt. Optional begrenzen **Von** und **Bis** die Historie auf ganze Kalendertage in der lokalen Zeitzone des Browsers; beide Tage sind eingeschlossen. Die Ansicht zeigt 50 Einträge pro Seite und bleibt dadurch auch bei einer längeren lokalen Nutzung übersichtlich. **CSV exportieren** lädt genau die aktuell gefilterten technischen Historienfelder einschließlich des gewählten Zeitraums herunter. Der Export enthält keine Worklist- oder PACS-Trefferlisten und keine patientenbezogenen Suchfilter.
 
 Der Typ **Modalitätsprüfung** speichert Profilname und beide Subresultate in einem gemeinsamen Lauf. Worklist-Ergebnislisten mit Patientendaten werden dabei nicht in diesen kombinierten Historieneintrag kopiert.
 

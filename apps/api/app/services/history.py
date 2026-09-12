@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import String, case, cast, func, or_, select
@@ -16,12 +16,18 @@ def history_filters(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    started_from: datetime | None = None,
+    started_before: datetime | None = None,
 ) -> list[Any]:
     filters: list[Any] = []
     if test_type:
         filters.append(TestRun.test_type == test_type)
     if success is not None:
         filters.append(TestRun.success == success)
+    if started_from is not None:
+        filters.append(TestRun.started_at >= started_from.astimezone(UTC))
+    if started_before is not None:
+        filters.append(TestRun.started_at < started_before.astimezone(UTC))
     if search and (term := search.strip()):
         pattern = f"%{term}%"
         filters.append(
@@ -43,10 +49,12 @@ def query_history(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    started_from: datetime | None = None,
+    started_before: datetime | None = None,
     limit: int | None = 50,
     offset: int = 0,
 ) -> tuple[Sequence[TestRun], int]:
-    filters = history_filters(test_type, success, search)
+    filters = history_filters(test_type, success, search, started_from, started_before)
     base = select(TestRun).outerjoin(Target).where(*filters)
     total = db.scalar(
         select(func.count()).select_from(TestRun).outerjoin(Target).where(*filters)

@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.20] - 2026-09-12
+
+### Added
+
+- Die Testhistorie kann nach lokalen Kalendertagen („Von“ und „Bis“) gefiltert werden; der CSV-Export verwendet denselben Zeitraum.
+- Die API akzeptiert eindeutige Zeitgrenzen mit Zeitzonenoffset und weist ungültige oder vertauschte Grenzen zurück.
+
+### Changed
+
+- Produktversion auf 0.3.20 angehoben.
+
 ## [0.3.19] - 2026-09-12
 
 ### Security

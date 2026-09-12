@@ -84,7 +84,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.19"}
+    return {"status": "ok", "version": "0.3.20"}
 
 
 @router.get("/ready")
@@ -93,7 +93,7 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.19"}
+    return {"status": "ready", "version": "0.3.20"}
 
 
 @router.get("/settings/runtime")
@@ -426,10 +426,13 @@ def search_runs(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    started_from: datetime | None = None,
+    started_before: datetime | None = None,
     limit: int = 50,
     offset: int = 0,
     db: Session = Depends(get_db),
 ):
+    validate_history_range(started_from, started_before)
     limit = min(max(limit, 1), 200)
     offset = max(offset, 0)
     items, total = query_history(
@@ -437,6 +440,8 @@ def search_runs(
         test_type=test_type,
         success=success,
         search=search,
+        started_from=started_from,
+        started_before=started_before,
         limit=limit,
         offset=offset,
     )
@@ -449,18 +454,30 @@ def csv_cell(value: object) -> object:
     return value
 
 
+def validate_history_range(started_from: datetime | None, started_before: datetime | None) -> None:
+    if any(value is not None and value.utcoffset() is None for value in (started_from, started_before)):
+        raise HTTPException(422, "History boundaries require a timezone offset")
+    if started_from is not None and started_before is not None and started_from >= started_before:
+        raise HTTPException(422, "History start must precede end")
+
+
 @router.get("/test-runs/export.csv")
 def export_runs_csv(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    started_from: datetime | None = None,
+    started_before: datetime | None = None,
     db: Session = Depends(get_db),
 ):
+    validate_history_range(started_from, started_before)
     items, _ = query_history(
         db,
         test_type=test_type,
         success=success,
         search=search,
+        started_from=started_from,
+        started_before=started_before,
         limit=None,
     )
     output = io.StringIO()

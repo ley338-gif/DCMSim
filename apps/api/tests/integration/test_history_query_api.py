@@ -1,7 +1,10 @@
+from datetime import UTC, datetime
+
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models import Target
+from app.models import TestRun as RunModel
 from app.services.history import record_run
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -79,6 +82,44 @@ def test_history_search_paginates_and_filters_server_side(tmp_path):
             assert host_match["items"][0]["test_type"] == "dicom_echo"
     finally:
         app.dependency_overrides.clear()
+
+
+def test_history_date_range_uses_timezone_aware_half_open_bounds_for_list_and_csv(tmp_path):
+    engine = create_engine(f"sqlite:///{tmp_path / 'history-dates.db'}")
+    factory = sessionmaker(bind=engine)
+    Base.metadata.create_all(engine)
+    with factory() as db:
+        for status, instant in (
+            ("BEFORE", datetime(2026, 9, 11, 21, 59, tzinfo=UTC)),
+            ("START", datetime(2026, 9, 11, 22, 0, tzinfo=UTC)),
+            ("END", datetime(2026, 9, 12, 21, 59, tzinfo=UTC)),
+            ("AFTER", datetime(2026, 9, 12, 22, 0, tzinfo=UTC)),
+        ):
+            db.add(RunModel(test_type="dicom_echo", started_at=instant, duration_ms=1, success=True, status=status, result_json={"success": True}))
+        db.commit()
+
+    def session_override():
+        with factory() as database:
+            yield database
+
+    app.dependency_overrides[get_db] = session_override
+    try:
+        with TestClient(app) as client:
+            bounds = {"started_from": "2026-09-12T00:00:00+02:00", "started_before": "2026-09-13T00:00:00+02:00"}
+            page = client.get("/api/test-runs/search", params=bounds)
+            assert page.status_code == 200
+            assert page.json()["total"] == 2
+            assert {item["status"] for item in page.json()["items"]} == {"START", "END"}
+            csv = client.get("/api/test-runs/export.csv", params=bounds)
+            assert csv.status_code == 200
+            assert "START" in csv.text and "END" in csv.text
+            assert "BEFORE" not in csv.text and "AFTER" not in csv.text
+            for path in ("/api/test-runs/search", "/api/test-runs/export.csv"):
+                assert client.get(path, params={"started_from": "2026-09-12T00:00:00"}).status_code == 422
+                assert client.get(path, params={"started_from": bounds["started_before"], "started_before": bounds["started_from"]}).status_code == 422
+    finally:
+        app.dependency_overrides.clear()
+        engine.dispose()
 
 
 def test_history_csv_exports_only_sanitized_technical_fields(tmp_path):
