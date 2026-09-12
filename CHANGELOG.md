@@ -8,6 +8,20 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.8] - 2026-09-12
+
+### Added
+
+- Konfigurationsabgleich für den letzten Einzeltest jedes Ziels: Host, Dienst-Port, Called AE, Calling AE und aktivierter Dienst.
+- Regressionstests für geänderte, unveränderte und ältere nicht belegbare Zielkonfigurationen.
+
+### Changed
+
+- Dashboard und Zielverwaltung zeigen einen alten Erfolg nach technischen Zieländerungen als „Erneut prüfen“ statt als aktuellen Erfolg.
+- Tests ohne technische Momentaufnahme werden als „Nicht belegbar“ gekennzeichnet; reine Namensänderungen lassen einen gültigen technischen Test bestehen.
+- Nach dem Speichern eines Ziels wird der Zielstatus sofort neu geladen.
+- Produktversion auf 0.3.8 angehoben.
+
 ## [0.3.7] - 2026-09-12
 
 ### Added

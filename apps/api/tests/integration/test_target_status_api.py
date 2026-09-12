@@ -44,7 +44,7 @@ def test_target_status_returns_only_the_latest_attributed_test(tmp_path):
         db.add_all(
             [
                 RunModel(target_id=target.id, test_type="dicom_echo", manual_target_json=None, started_at=older, duration_ms=10, success=True, status="0x0000", result_json={}),
-                RunModel(target_id=target.id, test_type="dicom_store", manual_target_json=None, duration_ms=25, success=False, status="DICOM_TIMEOUT", result_json={}),
+                RunModel(target_id=target.id, test_type="dicom_store", manual_target_json=None, target_snapshot_json={"name": "PACS", "host": "127.0.0.1", "port": 104, "called_ae": "PACS", "calling_ae": "DCMSIM"}, duration_ms=25, success=False, status="DICOM_TIMEOUT", result_json={}),
                 RunModel(target_id=None, test_type="dicom_echo", manual_target_json={"host": "127.0.0.3"}, duration_ms=4, success=True, status="0x0000", result_json={}),
             ]
         )
@@ -68,7 +68,18 @@ def test_target_status_returns_only_the_latest_attributed_test(tmp_path):
                     "duration_ms": 25,
                     "success": False,
                     "status": "DICOM_TIMEOUT",
+                    "configuration_state": "current",
                 }
             ]
+            with factory() as db:
+                changed = db.get(Target, target.id)
+                changed.name = "PACS neu"
+                db.commit()
+            assert client.get("/api/targets/test-status").json()[0]["configuration_state"] == "current"
+            with factory() as db:
+                changed = db.get(Target, target.id)
+                changed.host = "127.0.0.9"
+                db.commit()
+            assert client.get("/api/targets/test-status").json()[0]["configuration_state"] == "changed"
     finally:
         app.dependency_overrides.clear()
