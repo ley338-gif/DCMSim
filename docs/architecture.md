@@ -12,6 +12,8 @@ Frontend und Backend sind im Quellcode getrennt, werden im Container jedoch als 
 
 Docker Compose veröffentlicht den Container-Port standardmäßig nur auf der IPv4-Loopback-Adresse des Hosts (`127.0.0.1:8080`). `DCMSIM_PUBLISH_HOST` kann für einen bewusst abgesicherten Netzwerkzugriff auf eine private Host-Adresse gesetzt werden. Der Prozess im Container lauscht weiterhin auf `0.0.0.0`, damit die Portweiterleitung funktioniert; daraus folgt keine Veröffentlichung auf allen Host-Schnittstellen. DCMSim selbst bietet keine Authentifizierung.
 
+Diese Host-Portbindung betrifft nur eingehendes HTTP. Ausgehende DICOM-Verbindungen nutzen die Docker-Netzwerkroute und werden im CI mit einem getrennten Verification-SCP geprüft. Ein DICOM-Ziel `127.0.0.1` meint aus Sicht des Containers den Container selbst; für Dienste auf dem Host oder im Netz muss eine von dort erreichbare Adresse konfiguriert werden.
+
 `/api/health` ist eine reine Liveness-Prüfung des Webdienstes. `/api/ready` führt zusätzlich eine Datenbankabfrage aus und liefert bei Datenbankfehlern HTTP 503 ohne interne Fehlerdetails. Docker verwendet Readiness als Healthcheck. Weder Liveness noch Readiness baut eine DICOM-Verbindung zu gespeicherten Zielen auf.
 
 ## Frontend-Architektur und Designsystem

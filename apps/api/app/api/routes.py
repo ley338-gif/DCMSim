@@ -76,7 +76,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.11"}
+    return {"status": "ok", "version": "0.3.12"}
 
 
 @router.get("/ready")
@@ -85,7 +85,7 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.11"}
+    return {"status": "ready", "version": "0.3.12"}
 
 
 @router.get("/configuration/export")

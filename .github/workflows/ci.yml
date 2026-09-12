@@ -90,6 +90,21 @@ jobs:
           done
           docker logs dcmsim-health-ci
           exit 1
+      - name: Verify outbound DICOM from container
+        run: |
+          docker network create dcmsim-dicom-ci
+          docker network connect dcmsim-dicom-ci dcmsim-health-ci
+          docker run -d --name dcmsim-echo-scp --network dcmsim-dicom-ci dcmsim:ci python apps/api/tests/docker/echo_scp.py
+          for attempt in $(seq 1 20); do
+            if docker exec dcmsim-health-ci python -c 'import socket; socket.create_connection(("dcmsim-echo-scp", 11112), timeout=1).close()'; then break; fi
+            sleep 1
+          done
+          curl -fsS -X POST http://127.0.0.1:18080/api/dicom/echo \
+            -H 'Content-Type: application/json' \
+            --data '{"host":"dcmsim-echo-scp","port":11112,"called_ae":"TESTSCP","calling_ae":"DCMSIM"}' \
+            | python3 -c 'import json,sys; result=json.load(sys.stdin); assert result["success"] is True and result["status"] == "0x0000", result'
       - name: Remove test container
         if: always()
-        run: docker rm -f dcmsim-health-ci || true
+        run: |
+          docker rm -f dcmsim-echo-scp dcmsim-health-ci || true
+          docker network rm dcmsim-dicom-ci || true
