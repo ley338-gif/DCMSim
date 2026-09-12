@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -16,6 +17,7 @@ from starlette.background import BackgroundTask
 
 from app.core.config import settings
 from app.core.dates import as_utc
+from app.core.logging import effective_log_level
 from app.db.session import get_db
 from app.dicom.datasets import (
     SOP_LABELS,
@@ -82,7 +84,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.14"}
+    return {"status": "ok", "version": "0.3.15"}
 
 
 @router.get("/ready")
@@ -91,7 +93,18 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.14"}
+    return {"status": "ready", "version": "0.3.15"}
+
+
+@router.get("/settings/runtime")
+def runtime_settings():
+    """Expose only effective, non-sensitive DICOM process settings."""
+    return {
+        "connect_timeout": settings.connect_timeout,
+        "association_timeout": settings.association_timeout,
+        "dimse_timeout": settings.dimse_timeout,
+        "log_level": logging.getLevelName(effective_log_level(settings.log_level)),
+    }
 
 
 @router.get("/configuration/export")

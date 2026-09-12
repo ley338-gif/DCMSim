@@ -8,6 +8,21 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.15] - 2026-09-12
+
+### Fixed
+
+- Die Einstellungen bieten für Server-Timeouts und Log Level keine wirkungslosen, scheinbar speicherbaren Browser-Eingaben mehr an.
+
+### Added
+
+- Die tatsächlich wirksamen Server-Timeouts und das Log Level sind in den Einstellungen nur lesbar sichtbar. Der neue API-Endpunkt gibt keine Datenbankadresse oder andere vertrauliche Konfiguration aus.
+- Docker Compose reicht konfigurierte Timeout- und Log-Level-Werte aus der lokalen Umgebung an den Container weiter.
+
+### Changed
+
+- Produktversion auf 0.3.15 angehoben.
+
 ## [0.3.14] - 2026-09-12
 
 ### Fixed

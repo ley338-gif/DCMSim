@@ -7,6 +7,10 @@ services:
       - dcmsim-data:/data
     environment:
       DCMSIM_DATABASE_URL: sqlite:////data/dcmsim.db
+      DCMSIM_CONNECT_TIMEOUT: ${DCMSIM_CONNECT_TIMEOUT:-5}
+      DCMSIM_ASSOCIATION_TIMEOUT: ${DCMSIM_ASSOCIATION_TIMEOUT:-10}
+      DCMSIM_DIMSE_TIMEOUT: ${DCMSIM_DIMSE_TIMEOUT:-20}
+      DCMSIM_LOG_LEVEL: ${DCMSIM_LOG_LEVEL:-INFO}
     restart: unless-stopped
 
 volumes:

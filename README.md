@@ -2,7 +2,7 @@
 
 DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.3.14
+## Funktionen in 0.3.15
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -32,6 +32,7 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - CI prüft eine echte ausgehende DICOM-Verbindung vom Anwendungscontainer zu einem getrennten Testziel
 - Dashboard-Kennzahlen zählen die gesamte Historie statt nur die letzten 100 Einträge
 - UTC-Zeitstempel werden eindeutig übertragen; DICOM-Datumsfilter starten mit dem lokalen Kalendertag
+- Einstellungen zeigen die wirksamen Server-Timeouts und das Log Level nur lesbar an, statt wirkungslose Browser-Werte anzubieten
 
 ## Start mit Docker
 
@@ -48,6 +49,8 @@ DCMSim ist unter `http://localhost:8080` erreichbar. Docker bindet den Host-Port
 Für bewusst abgesicherten Netzwerkzugriff kann `DCMSIM_PUBLISH_HOST` in einer lokalen `.env` auf eine private IP-Adresse des Host-Rechners gesetzt werden. Das ändert nur die Docker-Portfreigabe und fügt **keine Anmeldung** hinzu. Eine öffentliche Freigabe ohne vorgeschaltete Zugangssicherung ist nicht vorgesehen.
 
 Die Portbindung der Weboberfläche begrenzt keine ausgehenden DICOM-Verbindungen. Als DICOM-Ziel muss aus dem Container eine erreichbare Adresse eingetragen werden: `127.0.0.1` zeigt dort auf den Container selbst, nicht auf den Docker-Host oder ein anderes PACS.
+
+Für andere Server-Timeouts oder ein anderes Application Log Level die Werte `DCMSIM_CONNECT_TIMEOUT`, `DCMSIM_ASSOCIATION_TIMEOUT`, `DCMSIM_DIMSE_TIMEOUT` und `DCMSIM_LOG_LEVEL` in einer lokalen `.env` setzen und den Container neu erstellen. **Einstellungen → DICOM/Logging** zeigt anschließend die wirksamen Werte nur lesbar an.
 
 ## Lokale Entwicklung
 
