@@ -76,3 +76,20 @@ jobs:
       - name: Verify explicit private-host override
         run: DCMSIM_PUBLISH_HOST=192.0.2.10 docker compose config --format json | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["dcmsim"]["ports"]; assert len(ports)==1 and ports[0]["host_ip"]=="192.0.2.10"'
       - run: docker build -t dcmsim:ci .
+      - name: Verify container readiness
+        run: |
+          docker run -d --name dcmsim-health-ci -p 127.0.0.1:18080:8080 dcmsim:ci
+          for attempt in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' dcmsim-health-ci)
+            if [ "$status" = healthy ]; then
+              curl -fsS http://127.0.0.1:18080/api/ready
+              exit 0
+            fi
+            if [ "$status" = unhealthy ]; then break; fi
+            sleep 2
+          done
+          docker logs dcmsim-health-ci
+          exit 1
+      - name: Remove test container
+        if: always()
+        run: docker rm -f dcmsim-health-ci || true

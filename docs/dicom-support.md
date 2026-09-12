@@ -12,6 +12,8 @@
 | Storage Commitment | Not supported |
 | Storage SCP | Not supported (nur Test-SCP in automatisierten Tests) |
 
+C-MOVE ist nicht bereits implementiert oder freigeschaltet, nur weil eine PACS-Suche vorhanden ist. Falls es später umgesetzt wird, benötigt der Empfang einen eigenen Storage-SCP samt AE, eingehendem DICOM-Port, PACS-Routing, gezielter Netzwerkfreigabe und Datenschutzkonzept. Die bestehende HTTP-Portbindung ist davon unabhängig.
+
 ## Storage SOP Classes
 
 | SOP Class | Synthetisch | Upload |

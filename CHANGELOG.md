@@ -8,6 +8,18 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.11] - 2026-09-12
+
+### Added
+
+- Separate Datenbank-Bereitschaftsprüfung unter `/api/ready`; Docker kennzeichnet den Container anhand dieser Prüfung als gesund oder ungesund.
+- Betriebsdokumentation erklärt den Unterschied zwischen Web-Liveness, Datenbank-Readiness und DICOM-Zieltests.
+- Die Voraussetzungen für ein mögliches späteres C-MOVE werden ohne vorzeitige Portfreigabe dokumentiert.
+
+### Changed
+
+- Produktversion auf 0.3.11 angehoben.
+
 ## [0.3.10] - 2026-09-12
 
 ### Changed
