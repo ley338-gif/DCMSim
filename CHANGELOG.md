@@ -8,6 +8,19 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.7] - 2026-09-12
+
+### Added
+
+- Neue Datenbankmigration für technische Ziel-Momentaufnahmen je Testlauf (Name, Host, Port, Calling/Called AE; keine Patientenwerte).
+- Regressionstests für unveränderliche Historienwerte nach Umbenennung und Hostwechsel eines Ziels.
+
+### Changed
+
+- Historienliste, Testdetails, Suche und CSV verwenden für neue Läufe die tatsächlich verwendete Zielkonfiguration statt der später möglicherweise geänderten Stammdaten.
+- Ältere Läufe ohne Momentaufnahme bleiben lesbar und zeigen unbekannte technische Felder ausdrücklich als nicht gespeichert an.
+- Produktversion auf 0.3.7 angehoben.
+
 ## [0.3.6] - 2026-09-12
 
 ### Added

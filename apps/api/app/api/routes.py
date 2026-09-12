@@ -76,7 +76,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.6"}
+    return {"status": "ok", "version": "0.3.7"}
 
 
 @router.get("/configuration/export")
@@ -442,17 +442,17 @@ def export_runs_csv(
         ]
     )
     for run in items:
-        manual = run.manual_target_json or {}
+        endpoint = run.target_snapshot_json or run.manual_target_json or {}
         profile_name = run.result_json.get("profile_name", "")
-        target_name = run.target.name if run.target else ""
+        target_name = endpoint.get("name") or run.result_json.get("target_name") or (run.target.name if run.target else "")
         writer.writerow(
             [
                 run.started_at.isoformat(),
                 run.test_type,
                 csv_cell(profile_name or target_name),
-                csv_cell(manual.get("host", "")),
-                csv_cell(manual.get("calling_ae", "")),
-                csv_cell(manual.get("called_ae", "")),
+                csv_cell(endpoint.get("host", "")),
+                csv_cell(endpoint.get("calling_ae", "")),
+                csv_cell(endpoint.get("called_ae", "")),
                 "ja" if run.success else "nein",
                 csv_cell(run.status),
                 run.duration_ms,

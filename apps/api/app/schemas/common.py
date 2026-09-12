@@ -204,6 +204,7 @@ class TestRunRead(BaseModel):
     test_type: str
     target_id: int | None
     manual_target_json: dict[str, Any] | None
+    target_snapshot_json: dict[str, Any] | None
     started_at: datetime
     duration_ms: int
     success: bool

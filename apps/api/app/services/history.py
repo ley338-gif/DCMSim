@@ -29,6 +29,7 @@ def history_filters(
                 TestRun.test_type.ilike(pattern),
                 Target.name.ilike(pattern),
                 cast(TestRun.manual_target_json, String).ilike(pattern),
+                cast(TestRun.target_snapshot_json, String).ilike(pattern),
                 cast(TestRun.result_json["profile_name"], String).ilike(pattern),
             )
         )
@@ -100,10 +101,18 @@ def record_run(
         manual = {
             key: endpoint.get(key) for key in ("host", "port", "called_ae", "calling_ae")
         }
+    snapshot = None
+    if endpoint.get("host"):
+        snapshot = {
+            key: endpoint.get(key) for key in ("host", "port", "called_ae", "calling_ae")
+        }
+        if target_id and result.get("target_name"):
+            snapshot["name"] = result["target_name"]
     run = TestRun(
         test_type=test_type,
         target_id=target_id,
         manual_target_json=manual,
+        target_snapshot_json=snapshot,
         duration_ms=result.get("duration_ms", 0),
         success=result.get("success", False),
         status=result.get("status") or result.get("code", "UNKNOWN"),

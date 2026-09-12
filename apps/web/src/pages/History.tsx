@@ -17,6 +17,7 @@ import {KeyValueList} from '../components/ui/KeyValueList'
 import {StatusBadge} from '../components/ui/Status'
 
 const label=(type:string)=>type==='mwl_find'?'Worklist':type==='qr_find'?'PACS-Suche':type==='dicom_store'?'PACS Store':type==='modality_check'?'Modalitätsprüfung':'C-ECHO'
+const runTargetName=(run:Run)=>run.test_type==='modality_check'?String(run.result_json.profile_name??'Modalitätsprofil'):run.target_snapshot_json?.name??String(run.result_json.target_name??run.manual_target_json?.host??(run.target_id?`Ziel #${run.target_id}`:'—'))
 
 export function History(){
  const navigate=useNavigate()
@@ -47,7 +48,7 @@ export function History(){
  const columns:Column<Run>[]=[
   {key:'time',header:'Zeit',render:r=>new Date(r.started_at).toLocaleString('de-DE')},
   {key:'type',header:'Typ',render:r=>label(r.test_type)},
-  {key:'target',header:'Ziel / Profil',className:'mono',render:r=>r.test_type==='modality_check'?String(r.result_json.profile_name??'Modalitätsprofil'):r.manual_target_json?.host??`Ziel #${r.target_id}`},
+  {key:'target',header:'Ziel / Profil',className:'mono',render:runTargetName},
   {key:'status',header:'Status',render:r=><StatusBadge tone={r.success?'success':'error'}>{r.success?'Erfolgreich':'Fehler'}</StatusBadge>},
   {key:'duration',header:'Dauer',render:r=>`${r.duration_ms} ms`},
   {key:'result',header:'Ergebnis',render:r=>['mwl_find','qr_find'].includes(r.test_type)?`${r.result_json.count??0} Treffer`:r.status},
@@ -79,11 +80,11 @@ export function HistoryDetail(){
  if(query.isLoading)return <LoadingState/>
  if(!query.data)return <SectionCard><p>Historieneintrag nicht gefunden.</p></SectionCard>
  const run=query.data
- const endpoint=run.manual_target_json
+ const endpoint=run.target_snapshot_json??run.manual_target_json
  const header=<PageHeader title={`${label(run.test_type)} · Test #${run.id}`} subtitle={new Date(run.started_at).toLocaleString('de-DE')} breadcrumbs={['Test-Historie',`Test #${run.id}`]} actions={<Link to="/history"><Button variant="outline" icon={<ArrowLeft size={16}/>}>Zurück</Button></Link>}/>
  if(run.test_type==='modality_check'){
   const result={...(run.result_json as ModalityCheckResult),run_id:run.id}
   return <>{header}<SectionCard title={result.profile_name}><ModalityCheckResultPanel result={result} showHistoryLink={false}/></SectionCard></>
  }
- return <>{header}<div className="dashboard-grid"><SectionCard title="Testergebnis"><TestResultSummary result={run.result_json}/></SectionCard><SectionCard title="Testparameter"><KeyValueList items={[{label:'Testtyp',value:label(run.test_type)},{label:'Host',value:endpoint?.host??`Ziel #${run.target_id}`,mono:true},{label:'Port',value:endpoint?.port,mono:true},{label:'Calling AE',value:endpoint?.calling_ae,mono:true},{label:'Called AE',value:endpoint?.called_ae,mono:true},{label:'Dauer',value:`${run.duration_ms} ms`}]} /></SectionCard></div><SectionCard title="Technisches Log"><DicomLogViewer result={run.result_json} context={{target:endpoint?`${endpoint.host}:${endpoint.port}`:undefined,calling:endpoint?.calling_ae,called:endpoint?.called_ae}}/><CollapsiblePanel title="Gespeicherte Request-/Response-Daten"><pre className="mono">{JSON.stringify(run.result_json,null,2)}</pre></CollapsiblePanel></SectionCard></>
+ return <>{header}<div className="dashboard-grid"><SectionCard title="Testergebnis"><TestResultSummary result={run.result_json}/></SectionCard><SectionCard title="Testparameter"><KeyValueList items={[{label:'Testtyp',value:label(run.test_type)},{label:'Ziel',value:runTargetName(run)},{label:'Host',value:endpoint?.host??'Für ältere Tests nicht gespeichert',mono:true},{label:'Port',value:endpoint?.port,mono:true},{label:'Calling AE',value:endpoint?.calling_ae,mono:true},{label:'Called AE',value:endpoint?.called_ae,mono:true},{label:'Dauer',value:`${run.duration_ms} ms`}]} /></SectionCard></div><SectionCard title="Technisches Log"><DicomLogViewer result={run.result_json} context={{target:endpoint?`${endpoint.host}:${endpoint.port}`:undefined,calling:endpoint?.calling_ae,called:endpoint?.called_ae}}/><CollapsiblePanel title="Gespeicherte Request-/Response-Daten"><pre className="mono">{JSON.stringify(run.result_json,null,2)}</pre></CollapsiblePanel></SectionCard></>
 }
