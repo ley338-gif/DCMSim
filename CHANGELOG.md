@@ -8,6 +8,20 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.5] - 2026-09-12
+
+### Added
+
+- Zentral validierte lokale Einstellungen mit sicheren Standardwerten bei beschädigtem Browser-Speicher.
+- Regressionstests für die Übernahme des Calling AE in neue Tests, Ziele und Modalitätsprofile.
+
+### Changed
+
+- Das gespeicherte Default Calling AE wird für neue manuelle Worklist-, Store- und PACS-Suchabfragen sowie neue Ziele und Modalitätsprofile verwendet.
+- Die kompakte Tabellenansicht wird nach dem Speichern sofort und beim nächsten Start automatisch angewendet.
+- Die Einstellungsseite kennzeichnet serverseitige Timeout- und Logging-Werte weiterhin ausdrücklich als Container-Konfiguration.
+- Produktversion auf 0.3.5 angehoben.
+
 ## [0.3.4] - 2026-09-12
 
 ### Added
