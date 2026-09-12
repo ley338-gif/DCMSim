@@ -20,7 +20,7 @@ export function AppShell({children}:{children:ReactNode}){
   <aside className={mobileOpen?'sidebar sidebar--open':'sidebar'}>
    <Link className="sidebar__brand" to="/" aria-label="Zur Übersicht" onClick={()=>setMobileOpen(false)}><img src="/DCMSim-Logo-dark.png" alt="DCMSim"/></Link>
    <nav aria-label="Hauptnavigation">{navigation.map(item=>{const Icon=item.icon;return <NavLink key={item.to} to={item.to} end={item.end} onClick={()=>setMobileOpen(false)}><Icon size={20}/><span>{item.label}</span></NavLink>})}</nav>
-   <div className="sidebar__footer"><p><span className="ready-dot"/>DCMSim bereit</p><small>Version 0.3.19</small><small>© 2026 DCMSim</small></div>
+   <div className="sidebar__footer"><p><span className="ready-dot"/>DCMSim bereit</p><small>Version 0.3.20</small><small>© 2026 DCMSim</small></div>
   </aside>
   <div className="app-frame">
    <div className="topbar">

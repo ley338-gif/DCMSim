@@ -1,10 +1,11 @@
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query'
-import {render,screen,waitFor} from '@testing-library/react'
+import {fireEvent,render,screen,waitFor} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {MemoryRouter,Route,Routes} from 'react-router-dom'
 import {afterEach} from 'vitest'
 import {api,Run} from '../api/client'
 import {History,HistoryDetail} from '../pages/History'
+import {localDayAfterIso,localDayStartIso} from '../utils/dates'
 
 const run:Run={id:1,test_type:'dicom_echo',target_id:null,manual_target_json:{host:'127.0.0.1',port:104,called_ae:'PACS',calling_ae:'DCMSIM'},started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',result_json:{success:true,duration_ms:12}}
 
@@ -21,6 +22,20 @@ it('filters and paginates history through the server query',async()=>{
 
  await userEvent.click(screen.getByRole('button',{name:'Weiter'}))
  await waitFor(()=>expect(history).toHaveBeenCalledWith(expect.objectContaining({success:false,offset:50})))
+})
+
+it('filters history by whole local days and rejects reversed dates',async()=>{
+ const history=vi.spyOn(api,'history').mockResolvedValue({items:[run],total:1,limit:50,offset:0})
+ render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><History/></MemoryRouter></QueryClientProvider>)
+ await screen.findByText('1–1 von 1 Tests')
+ fireEvent.change(screen.getByLabelText('Von'),{target:{value:'2026-09-12'}})
+ fireEvent.change(screen.getByLabelText('Bis'),{target:{value:'2026-09-12'}})
+ await waitFor(()=>expect(history).toHaveBeenCalledWith(expect.objectContaining({started_from:localDayStartIso('2026-09-12'),started_before:localDayAfterIso('2026-09-12'),offset:0})))
+ const calls=history.mock.calls.length
+ fireEvent.change(screen.getByLabelText('Bis'),{target:{value:'2026-09-11'}})
+ expect(await screen.findByText('Das Bis-Datum muss am oder nach dem Von-Datum liegen.')).toBeVisible()
+ expect(screen.getByRole('button',{name:'CSV exportieren'})).toBeDisabled()
+ expect(history).toHaveBeenCalledTimes(calls)
 })
 
 it('shows the original endpoint snapshot for a saved target',async()=>{
