@@ -71,4 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Verify localhost-only default
+        run: docker compose config --format json | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["dcmsim"]["ports"]; assert len(ports)==1 and ports[0]["host_ip"]=="127.0.0.1"'
+      - name: Verify explicit private-host override
+        run: DCMSIM_PUBLISH_HOST=192.0.2.10 docker compose config --format json | python3 -c 'import json,sys; ports=json.load(sys.stdin)["services"]["dcmsim"]["ports"]; assert len(ports)==1 and ports[0]["host_ip"]=="192.0.2.10"'
       - run: docker build -t dcmsim:ci .

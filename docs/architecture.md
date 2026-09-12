@@ -10,6 +10,8 @@ Browser → React/TypeScript → REST → FastAPI
 
 Frontend und Backend sind im Quellcode getrennt, werden im Container jedoch als ein Stack ausgeliefert. FastAPI liefert die gebauten statischen Dateien und die `/api`-Endpunkte aus. Es existieren weder externe Datenbank noch Queue oder Worker.
 
+Docker Compose veröffentlicht den Container-Port standardmäßig nur auf der IPv4-Loopback-Adresse des Hosts (`127.0.0.1:8080`). `DCMSIM_PUBLISH_HOST` kann für einen bewusst abgesicherten Netzwerkzugriff auf eine private Host-Adresse gesetzt werden. Der Prozess im Container lauscht weiterhin auf `0.0.0.0`, damit die Portweiterleitung funktioniert; daraus folgt keine Veröffentlichung auf allen Host-Schnittstellen. DCMSim selbst bietet keine Authentifizierung.
+
 ## Frontend-Architektur und Designsystem
 
 Das React-Frontend besteht aus drei wiederverwendbaren Ebenen:

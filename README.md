@@ -2,7 +2,7 @@
 
 DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.3.9
+## Funktionen in 0.3.10
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -24,12 +24,10 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - serverseitig filterbare und paginierte Testhistorie mit datensparsamem CSV-Export
 - wirksame lokale Benutzerstandards für Calling AE und kompakte Tabellen
 - evidenzbasierter Zielstatus aus dem jeweils letzten zugeordneten Einzeltest
-
 - datensparsame technische Ziel-Momentaufnahme pro Testlauf für eine verlässliche Historie nach Zieländerungen
-
 - Zielstatus berücksichtigt Änderungen an Host, Port und AE-Titeln und verlangt danach einen neuen Test
-
 - integrierte Hilfe und ehrlicher Kopfbereich ohne vorgetäuschte Anmeldung oder Benachrichtigungen
+- Docker veröffentlicht die Oberfläche standardmäßig nur auf dem eigenen Rechner
 
 ## Start mit Docker
 
@@ -39,7 +37,9 @@ Voraussetzung ist Docker mit Compose. Danach:
 docker compose up --build
 ```
 
-DCMSim ist unter `http://localhost:8080` erreichbar. Die Datenbank liegt im Volume unter `/data/dcmsim.db`.
+DCMSim ist unter `http://localhost:8080` erreichbar. Docker bindet den Host-Port standardmäßig nur an `127.0.0.1`; andere Geräte können ihn damit nicht direkt erreichen. Die Datenbank liegt im Volume unter `/data/dcmsim.db`.
+
+Für bewusst abgesicherten Netzwerkzugriff kann `DCMSIM_PUBLISH_HOST` in einer lokalen `.env` auf eine private IP-Adresse des Host-Rechners gesetzt werden. Das ändert nur die Docker-Portfreigabe und fügt **keine Anmeldung** hinzu. Eine öffentliche Freigabe ohne vorgeschaltete Zugangssicherung ist nicht vorgesehen.
 
 ## Lokale Entwicklung
 

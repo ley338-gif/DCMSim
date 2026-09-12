@@ -2,7 +2,7 @@ services:
   dcmsim:
     build: .
     ports:
-      - "8080:8080"
+      - "${DCMSIM_PUBLISH_HOST:-127.0.0.1}:8080:8080"
     volumes:
       - dcmsim-data:/data
     environment:
