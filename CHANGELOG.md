@@ -8,6 +8,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.19] - 2026-09-12
+
+### Security
+
+- Vitest und `@vitest/mocker` auf die korrigierte Version 4.1.11 aktualisiert; damit sind die zwei Meldungen zum Redirect-Mock-Path-Traversal behoben.
+- Die Frontend-CI führt `npm audit --audit-level=moderate` aus, damit entsprechende neue Abhängigkeitsmeldungen sichtbar und prüfpflichtig werden.
+
+### Changed
+
+- Produktversion auf 0.3.19 angehoben.
+
 ## [0.3.18] - 2026-09-12
 
 ### Fixed
