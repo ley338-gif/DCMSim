@@ -1,9 +1,10 @@
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
+from datetime import datetime
 from typing import Any
 
-from sqlalchemy import String, cast, func, or_, select
+from sqlalchemy import String, case, cast, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import Target, TestRun
@@ -55,6 +56,25 @@ def query_history(
         query = query.limit(limit)
     items = db.scalars(query).all()
     return items, total
+
+
+def dashboard_summary(db: Session, day_start: datetime, day_end: datetime) -> dict[str, Any]:
+    today_total, today_success = db.execute(
+        select(
+            func.count(TestRun.id),
+            func.sum(case((TestRun.success.is_(True), 1), else_=0)),
+        ).where(TestRun.started_at >= day_start, TestRun.started_at < day_end)
+    ).one()
+    by_type = dict(
+        db.execute(
+            select(TestRun.test_type, func.count(TestRun.id)).group_by(TestRun.test_type)
+        ).all()
+    )
+    return {
+        "today_total": today_total,
+        "today_success": today_success or 0,
+        "by_type": by_type,
+    }
 
 
 def target_configuration_state(run: TestRun) -> str:

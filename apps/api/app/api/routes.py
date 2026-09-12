@@ -1,7 +1,7 @@
 import csv
 import io
 import os
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import monotonic
 
@@ -46,7 +46,12 @@ from app.schemas.common import (
     WorklistRequest,
 )
 from app.services.diagnostics import recommendation_for
-from app.services.history import latest_target_test_statuses, query_history, record_run
+from app.services.history import (
+    dashboard_summary,
+    latest_target_test_statuses,
+    query_history,
+    record_run,
+)
 from app.services.modality_checks import run_modality_check
 from app.services.operations import (
     create_sqlite_backup,
@@ -76,7 +81,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.12"}
+    return {"status": "ok", "version": "0.3.13"}
 
 
 @router.get("/ready")
@@ -85,7 +90,7 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.12"}
+    return {"status": "ready", "version": "0.3.13"}
 
 
 @router.get("/configuration/export")
@@ -389,7 +394,17 @@ async def dicom_store_upload(
 @router.get("/test-runs", response_model=list[TestRunRead])
 def list_runs(limit: int = 100, db: Session = Depends(get_db)):
     limit = min(max(limit, 1), 500)
-    return db.scalars(select(TestRun).order_by(desc(TestRun.started_at)).limit(limit)).all()
+    return db.scalars(select(TestRun).order_by(desc(TestRun.started_at), desc(TestRun.id)).limit(limit)).all()
+
+
+@router.get("/dashboard/summary")
+def get_dashboard_summary(day_start: datetime, day_end: datetime, db: Session = Depends(get_db)):
+    if day_start.utcoffset() is None or day_end.utcoffset() is None:
+        raise HTTPException(422, "Day boundaries require a timezone offset")
+    start_utc, end_utc = day_start.astimezone(UTC), day_end.astimezone(UTC)
+    if not timedelta(0) < end_utc - start_utc <= timedelta(hours=26):
+        raise HTTPException(422, "Invalid day boundaries")
+    return dashboard_summary(db, start_utc, end_utc)
 
 
 @router.get("/test-runs/search", response_model=TestRunPage)
