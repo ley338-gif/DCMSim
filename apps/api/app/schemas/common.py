@@ -209,3 +209,10 @@ class TestRunRead(BaseModel):
     success: bool
     status: str
     result_json: dict[str, Any]
+
+
+class TestRunPage(BaseModel):
+    items: list[TestRunRead]
+    total: int
+    limit: int
+    offset: int

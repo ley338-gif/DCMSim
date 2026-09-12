@@ -73,6 +73,8 @@ Patienten- und Studiendaten werden nur in der aktuellen Antwort angezeigt. Die H
 
 Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
 
+Filter und Freitextsuche werden serverseitig ausgeführt. Die Ansicht zeigt 50 Einträge pro Seite und bleibt dadurch auch bei einer längeren lokalen Nutzung übersichtlich. **CSV exportieren** lädt genau die aktuell gefilterten technischen Historienfelder herunter. Der Export enthält keine Worklist- oder PACS-Trefferlisten und keine patientenbezogenen Suchfilter.
+
 Der Typ **Modalitätsprüfung** speichert Profilname und beide Subresultate in einem gemeinsamen Lauf. Worklist-Ergebnislisten mit Patientendaten werden dabei nicht in diesen kombinierten Historieneintrag kopiert.
 
 ## 14. Technische Details anzeigen
