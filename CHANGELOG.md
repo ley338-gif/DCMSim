@@ -8,6 +8,21 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.6] - 2026-09-12
+
+### Added
+
+- API-Zusammenfassung des jeweils letzten direkt einem Ziel zugeordneten Testlaufs.
+- Wiederverwendbare Zielstatusanzeige mit Ergebnis und Prüfzeitpunkt.
+- Backend-, Frontend- und Browsertests für erfolgreiche, fehlgeschlagene und ungeprüfte Ziele.
+
+### Changed
+
+- Dashboard und Zielverwaltung zeigen nicht mehr pauschal „Konfiguriert“, sondern ausschließlich gemessene Testergebnisse oder „Ungeprüft“.
+- Manuelle Verbindungstests beim Bearbeiten eines gespeicherten Ziels werden diesem Ziel zugeordnet und aktualisieren den Status direkt.
+- Zielnamen aus dem gespeicherten Testergebnis ersetzen nach Möglichkeit technische Ziel-IDs in der Dashboard-Historie.
+- Produktversion auf 0.3.6 angehoben.
+
 ## [0.3.5] - 2026-09-12
 
 ### Added

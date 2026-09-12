@@ -56,6 +56,29 @@ def query_history(
     return items, total
 
 
+def latest_target_test_statuses(db: Session) -> list[dict[str, Any]]:
+    latest_ids = (
+        select(TestRun.target_id, func.max(TestRun.id).label("run_id"))
+        .where(TestRun.target_id.is_not(None))
+        .group_by(TestRun.target_id)
+        .subquery()
+    )
+    runs = db.scalars(select(TestRun).join(latest_ids, TestRun.id == latest_ids.c.run_id)).all()
+    return [
+        {
+            "target_id": run.target_id,
+            "run_id": run.id,
+            "test_type": run.test_type,
+            "started_at": run.started_at,
+            "duration_ms": run.duration_ms,
+            "success": run.success,
+            "status": run.status,
+        }
+        for run in runs
+        if run.target_id is not None
+    ]
+
+
 def sanitize_history_result(test_type: str, result: dict[str, Any]) -> dict[str, Any]:
     """Return the technical result that may safely be persisted in test history."""
     sanitized = deepcopy(result)

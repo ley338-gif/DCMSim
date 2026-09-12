@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import {EndpointFields} from '../components/EndpointFields'
 import {ResultPanel} from '../components/ResultPanel'
 import {TechnicalDetails} from '../components/TechnicalDetails'
+import {TargetTestStatus} from '../components/dicom/TargetTestStatus'
 
 const target={id:1,name:'JiveX Test',host:'127.0.0.1',mwl_enabled:true,mwl_port:11112,mwl_called_ae:'MWL',store_enabled:true,store_port:11113,store_called_ae:'PACS',default_calling_ae:'DCMSIM',created_at:'',updated_at:''}
 
@@ -11,4 +12,6 @@ it('selects a saved target and fills its worklist endpoint',async()=>{const chan
 it('renders technical dataset elements',async()=>{render(<TechnicalDetails data={[{tag:'(0010,0020)',name:'Patient ID',vr:'LO',value:'DCMSIM-TEST-0001'}]}/>);await userEvent.click(screen.getByText('Technische Details'));expect(screen.getByText('DCMSIM-TEST-0001')).toBeVisible()})
 
 it('renders a presentation context failure with stable code',()=>{render(<ResultPanel result={{success:false,code:'DICOM_NO_PRESENTATION_CONTEXT',message:'No acceptable presentation context',duration_ms:20}}/>);expect(screen.getByText('No acceptable presentation context')).toBeVisible();expect(screen.getAllByText('DICOM_NO_PRESENTATION_CONTEXT').length).toBeGreaterThan(0)})
+
+it('distinguishes untested and successfully tested targets',()=>{const view=render(<TargetTestStatus/>);expect(screen.getByText('Ungeprüft')).toBeVisible();view.rerender(<TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000'}}/>);expect(screen.getByText('Erfolgreich')).toBeVisible();expect(screen.queryByText('Ungeprüft')).not.toBeInTheDocument()})
 

@@ -18,6 +18,7 @@ it('normalizes invalid locally stored values',()=>{localStorage.setItem('dcmsim-
 it('uses the saved Calling AE for manual tests and new configuration',async()=>{
  localStorage.setItem('dcmsim-settings',JSON.stringify({callingAe:'LOCAL_AET'}))
  vi.spyOn(api,'targets').mockResolvedValue([])
+ vi.spyOn(api,'targetStatuses').mockResolvedValue([])
  const worklist=render(wrapper(<Worklist/>))
  expect(await screen.findByLabelText('Calling AE')).toHaveValue('LOCAL_AET')
  worklist.unmount()

@@ -216,3 +216,13 @@ class TestRunPage(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class TargetTestStatusRead(BaseModel):
+    target_id: int
+    run_id: int
+    test_type: str
+    started_at: datetime
+    duration_ms: int
+    success: bool
+    status: str
