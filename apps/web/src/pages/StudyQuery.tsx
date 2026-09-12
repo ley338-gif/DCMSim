@@ -11,9 +11,10 @@ import {AlertBox} from '../components/ui/Feedback'
 import {DateInput,FormField,Select,TextInput} from '../components/ui/Form'
 import {Modal} from '../components/ui/Overlay'
 import {StatusBadge} from '../components/ui/Status'
+import {loadLocalSettings} from '../settings/localSettings'
 
 const today=new Date().toISOString().slice(0,10)
-const blankEndpoint:Endpoint={host:'',port:104,called_ae:'',calling_ae:'DCMSIM'}
+const blankEndpoint=():Endpoint=>({host:'',port:104,called_ae:'',calling_ae:loadLocalSettings().callingAe})
 const blankFilters={patient_name:'',patient_id:'',accession_number:'',study_date:today,modality:''}
 
 function DicomTree({items}:{items:DicomElement[]}){return <div className="dicom-tree">{items.map((item,index)=><div className="dicom-element" key={`${item.tag}-${index}`}><span>{item.tag}</span><b>{item.name}</b><code>{Array.isArray(item.value)?JSON.stringify(item.value):item.value||'—'}</code></div>)}</div>}

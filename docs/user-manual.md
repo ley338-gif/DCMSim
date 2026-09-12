@@ -87,6 +87,6 @@ Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetai
 
 ## 16. Einstellungen
 
-Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung vormerken. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.
+Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Timeouts, Logging, Retention und Darstellung verwalten. Das gespeicherte Default Calling AE wird bei neuen manuellen DICOM-Tests, Zielen und Modalitätsprofilen vorbelegt. Die kompakte Tabellenansicht wird nach dem Speichern sofort und bei späteren Aufrufen automatisch verwendet. Serverseitige Timeouts und Log Level werden im MVP weiterhin über die Container-Umgebung konfiguriert; die Oberfläche weist darauf ausdrücklich hin.
 
 Unter **Datensicherung** kann die Konfiguration als JSON exportiert und wieder importiert werden. Der Import aktualisiert Einträge gleichen Namens oder legt neue an; nicht enthaltene Daten werden nicht gelöscht. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.

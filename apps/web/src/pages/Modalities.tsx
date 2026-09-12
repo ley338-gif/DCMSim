@@ -11,9 +11,10 @@ import {AlertBox} from '../components/ui/Feedback'
 import {Checkbox,FormField,Select,TextInput} from '../components/ui/Form'
 import {Modal} from '../components/ui/Overlay'
 import {StatusBadge} from '../components/ui/Status'
+import {loadLocalSettings} from '../settings/localSettings'
 
 const modalities=['CT','MR','US','CR','DX','OT','XA','MG','NM','PT'] as const
-const blank:ModalityProfileDraft={name:'',description:null,modality:'CT',calling_ae:'DCMSIM',mwl_enabled:true,mwl_target_id:null,store_enabled:true,store_target_id:null}
+const blank=():ModalityProfileDraft=>({name:'',description:null,modality:'CT',calling_ae:loadLocalSettings().callingAe,mwl_enabled:true,mwl_target_id:null,store_enabled:true,store_target_id:null})
 const targetName=(targets:Target[],id:number|null)=>targets.find(target=>target.id===id)?.name??(id?'Gelöschtes Ziel':'Nicht konfiguriert')
 const profileReady=(profile:ModalityProfile)=>(!profile.mwl_enabled||Boolean(profile.mwl_target_id))&&(!profile.store_enabled||Boolean(profile.store_target_id))
 
@@ -28,7 +29,7 @@ export function Modalities(){
  const [selected,setSelected]=useState<ModalityProfile>()
  const [controller,setController]=useState<AbortController>()
  const [cancelled,setCancelled]=useState(false)
- const close=()=>{setOpen(false);setEditing(undefined);setDraft(blank)}
+ const close=()=>{setOpen(false);setEditing(undefined);setDraft(blank())}
  const save=useMutation({mutationFn:()=>editing?api.updateModalityProfile(editing,draft):api.createModalityProfile(draft),onSuccess:()=>{client.invalidateQueries({queryKey:['modality-profiles']});close()}})
  const remove=useMutation({mutationFn:api.deleteModalityProfile,onSuccess:()=>client.invalidateQueries({queryKey:['modality-profiles']})})
  const check=useMutation({
