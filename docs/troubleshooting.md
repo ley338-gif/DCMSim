@@ -6,13 +6,13 @@ Die Container-Logs enthalten bewusst keine vollständigen DICOM-Dataset-Dumps. F
 
 ## Worklist liefert 0 Treffer
 
-1. Broad Query ausführen.
+1. Zuerst Datum, Worklist-Kanal und dessen Filtermodi prüfen.
 2. Station AE entfernen.
 3. Modalität entfernen.
-4. Datum und Zeitzone kontrollieren.
+4. Nur bei Bedarf **Breite Worklist-Diagnose starten** ausdrücklich ausführen.
 5. Raw Dataset und RIS-/MWL-Mapping prüfen.
 
-Liefert Broad Query Treffer, funktionieren Netzwerk und DICOM grundsätzlich; ein Query-Filter oder Mapping ist wahrscheinlich die Ursache.
+Die breite Diagnose wird nicht automatisch ausgeführt: Sie entfernt Station AE und Modalität, behält aber den aktuellen Datumsfilter bei. Sie kann mehr Worklist-Daten zurückgeben. Liefert sie Treffer, funktionieren Netzwerk und DICOM grundsätzlich; ein Kanalfilter oder Mapping ist wahrscheinlich die Ursache. Treffer und patientenbezogene Filter werden nicht in der Historie persistiert.
 
 ## Association rejected / Called AE falsch
 
@@ -60,6 +60,14 @@ Bei Docker zeigt ein DICOM-Ziel `127.0.0.1` auf den DCMSim-Container selbst. Fü
 
 Study-, Series- und SOP-UID aus dem Testergebnis kopieren und im PACS-Log suchen. Patient ID beginnt mit `DCMSIM-`; Study Description ist `PACS STORE TEST`. Importregeln, Quarantäne und Modalitätsfilter des PACS prüfen.
 
-## Profil meldet „Ziel fehlt“
+## Profil meldet „Zuordnung fehlt“
 
-Das referenzierte Ziel wurde gelöscht oder ein aktiver Dienst hat noch kein Ziel. Das Profil bleibt absichtlich erhalten. Unter **Modalitäten → Bearbeiten** für jeden aktiven Dienst ein geeignetes Ziel neu auswählen.
+Worklist-Kanal, STORE-Endpoint oder organisatorischer Bereich fehlt. Das Profil bleibt absichtlich erhalten und erscheint gegebenenfalls unter **Nicht zugeordnet**. Unter **Systeme** zuerst Endpoint und Kanal prüfen; danach unter **Modalitäten → Bearbeiten** Bereich, Worklist-Kanal und STORE-Endpoint neu auswählen.
+
+## Legacy-Ziel erscheint statt strukturiertem Endpoint
+
+Bestehende kombinierte Ziele bleiben nach dem Upgrade absichtlich mit dem Zusatz **Legacy** auswählbar. Migration `0006` erzeugt normalerweise parallele DICOM-Systeme und Endpoints. Fehlen diese, Datenbank vor weiteren Änderungen sichern, `alembic -c apps/api/alembic.ini current` prüfen und anschließend `upgrade head` ausführen. Historieneinträge nicht manuell auf neue IDs umschreiben; ihre gespeicherte Momentaufnahme muss unverändert bleiben.
+
+## Endpoint lässt sich nicht löschen
+
+Ein MWL-Endpoint, den ein Worklist-Kanal referenziert, wird nicht kaskadierend entfernt. Zuerst den Kanal auf einen anderen MWL-Endpoint umstellen oder löschen. Diese Sperre verhindert, dass Modalitätschecks unbemerkt auf ein anderes Ziel zeigen.

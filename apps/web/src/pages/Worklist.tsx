@@ -23,6 +23,7 @@ function DicomTree({items,depth=0}:{items:DicomElement[];depth?:number}){
 
 export function Worklist(){
  const {data:targets=[]}=useQuery({queryKey:['targets'],queryFn:api.targets})
+ const {data:endpoints=[]}=useQuery({queryKey:['dicom-endpoints'],queryFn:api.dicomEndpoints})
  const [endpoint,setEndpoint]=useState<Endpoint>(()=>({host:'',port:104,called_ae:'',calling_ae:loadLocalSettings().callingAe}))
  const [filters,setFilters]=useState(()=>({date:localDateString(),modality:'',station_ae:'',patient_id:'',accession_number:'',patient_name:''}))
  const [result,setResult]=useState<Result>()
@@ -64,7 +65,7 @@ export function Worklist(){
   <div className="worklist-layout">
    <SectionCard title="Worklist Test" subtitle="Abfrageparameter konfigurieren und Worklist abrufen">
     <form onSubmit={submit}>
-     <TargetSelector value={endpoint} onChange={changeEndpoint} targets={targets} service="mwl"/>
+     <TargetSelector value={endpoint} onChange={changeEndpoint} targets={targets} endpoints={endpoints} service="mwl"/>
      <div className="form-divider"/>
      <div className="query-fields">
       <FormField label="Datum" htmlFor="filter-date"><DateInput id="filter-date" value={filters.date} onChange={event=>changeFilters({...filters,date:event.target.value})}/></FormField>

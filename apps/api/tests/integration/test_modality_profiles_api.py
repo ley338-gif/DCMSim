@@ -119,6 +119,20 @@ def test_profile_requires_target_for_each_enabled_service(client):
     assert response.status_code == 422
 
 
+@pytest.mark.parametrize("active_service", ["mwl", "store"])
+def test_legacy_profile_supports_exactly_one_active_service(client, active_service):
+    target_id = client.post("/api/targets", json=target_payload()).json()["id"]
+    payload = profile_payload(
+        target_id,
+        name=f"{active_service} only",
+        mwl_enabled=active_service == "mwl",
+        mwl_target_id=target_id if active_service == "mwl" else None,
+        store_enabled=active_service == "store",
+        store_target_id=target_id if active_service == "store" else None,
+    )
+    assert client.post("/api/modality-profiles", json=payload).status_code == 201
+
+
 def test_modality_check_endpoint_uses_profile_and_transfer_syntax(client, monkeypatch):
     target_id = client.post("/api/targets", json=target_payload()).json()["id"]
     profile_id = client.post(

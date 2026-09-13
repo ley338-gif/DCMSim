@@ -24,12 +24,19 @@ Docker zeigt den Container als gesund an, wenn Webdienst und lokale Datenbank an
 - **MWL SCU** (DCMSim) fragt per **C-FIND** einen **MWL SCP** (RIS/PACS) ab.
 - **Storage SCU** (DCMSim) sendet per C-STORE an einen **Storage SCP** (PACS).
 - **Query/Retrieve SCU** sucht per Study Root C-FIND nach Studien. Es ruft keine Bilder ab.
+- Ein **DICOM-System** bezeichnet eine technische Gegenstelle wie RIS oder PACS. Ein **Endpoint** beschreibt genau einen Dienst mit Host, Port und Called AE.
+- Ein **Worklist-Kanal** verbindet einen organisatorischen Bereich mit genau einem MWL-Endpoint und legt fest, ob Station AE und Modalität aus dem Profil, als fester Wert oder gar nicht gesendet werden.
+- Die feste Zuordnung lautet organisatorisch **Standort → Bereich → Modalität** und technisch **DICOM-System → Endpoint**. Sie ist keine frei erweiterbare Registry-Hierarchie.
 - Eine **SOP Class** bezeichnet den DICOM-Objekttyp. Eine **Transfer Syntax** bestimmt seine Kodierung. Beide werden im **Presentation Context** ausgehandelt.
 - **Study UID**, **Series UID** und **SOP UID** identifizieren Untersuchung, Serie und einzelnes Objekt weltweit eindeutig.
 
-## 3. Ziele verwalten
+## 3. Systeme, Endpoints und Kanäle verwalten
 
-Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Port, Called AE und Default Calling AE setzen. Worklist, Store und PACS-Suche können unterschiedliche Ports oder Called AEs verwenden. Gespeicherte Ziele erscheinen in den Testformularen; manuelle Eingabe bleibt immer möglich.
+Unter **Systeme** werden links Standorte und Bereiche und rechts technische DICOM-Systeme mit ihren Endpoints verwaltet. Ein Endpoint hat genau einen Dienst (`MWL`, `STORE` oder `QR`), Host, Port und Called AE. Danach verbindet ein Worklist-Kanal einen Bereich mit einem MWL-Endpoint. Für Station AE und Modalitätsfilter stehen **Vom Profil**, **Fester Wert** und **Nicht senden** zur Auswahl. Modalitätsprofile wählen anschließend einen Bereich, einen Worklist-Kanal und einen STORE-Endpoint.
+
+Gelöschte organisatorische Zuordnungen löschen keine Modalitätsprofile: betroffene Profile oder Kanäle erscheinen unter **Nicht zugeordnet** und müssen bewusst neu zugeordnet werden. Ein referenzierter MWL-Endpoint kann nicht gelöscht werden, solange ein Kanal ihn verwendet. Diese Regeln verhindern stilles Umverdrahten von DICOM-Tests.
+
+Bestehende kombinierte Ziele bleiben nach einem Upgrade erhalten und erscheinen in manuellen Testformularen mit dem Zusatz **Legacy**. Migration `0006` erzeugt daraus DICOM-Systeme und je aktivem Dienst einen Endpoint. Bestehende Modalitätsprofile werden soweit möglich auf erzeugte Worklist-Kanäle und STORE-Endpoints abgebildet; ohne Standortinformation bleiben sie **Nicht zugeordnet**. Frühere Historieneinträge und ihre technischen Momentaufnahmen werden nicht umgedeutet.
 
 Der Zielstatus zeigt den letzten direkt zugeordneten Einzeltest mit Ergebnis, Testtyp und Zeitpunkt. Über den verlinkten Testtyp öffnet sich der zugehörige Historieneintrag. Ein erfolgreiches **C-ECHO** belegt nur die Association und C-ECHO-Antwort, nicht einen erfolgreichen C-STORE- oder Worklist-Lauf. Ohne einen Einzeltest steht dort **Ungeprüft**. Ein gespeichertes Ziel kann über **Bearbeiten → Verbindung testen** gezielt geprüft werden. Eine kombinierte Modalitätsprüfung kann unterschiedliche Ziele verwenden und wird deshalb weiterhin separat in der Historie dargestellt.
 
@@ -65,13 +72,13 @@ Patientenname und Patient-ID aus der Datei erscheinen während des aktuellen Tes
 
 ## 10. Modalitätsprofile
 
-Unter **Modalitäten** bildet ein Profil die Konfiguration eines Geräts ab. **Neue Modalität** öffnen, Name, Modalitätscode und Calling AE eintragen und die benötigten Dienste aktivieren. MWL- und Store-Ziel werden aus den bereits unter **Ziele** gepflegten Systemen gewählt; Called AE, Host und Port bleiben deshalb zentral am Ziel gespeichert.
+Unter **Modalitäten** bildet ein Profil die testrelevante Konfiguration eines Geräts ab. **Neue Modalität** öffnen, Name, Modalitätscode und Calling AE eintragen, Standort/Bereich wählen und einen passenden Worklist-Kanal sowie STORE-Endpoint zuordnen. Die Ansicht gruppiert Profile nach Standort und Bereich; fehlende oder gelöschte Bereiche erscheinen ausdrücklich unter **Nicht zugeordnet**.
 
-Unterstützt werden zunächst CT, MR, US, CR, DX, OT, XA, MG, NM und PT. Ein Profil kann nur gespeichert werden, wenn mindestens ein Dienst aktiv ist und jeder aktive Dienst ein passendes Ziel besitzt.
+Unterstützt werden CT, MR, US, CR, DX, OT, XA, MG, NM und PT. Für einen kombinierten Check müssen Worklist-Kanal und STORE-Endpoint vorhanden sein. Die Struktur ist bewusst fest; DCMSim ersetzt kein vollständiges Anlagen- oder Organisationsregister.
 
 ## 11. Modalität prüfen
 
-**Modalität prüfen** führt die aktivierten Subchecks nacheinander aus. Worklist fragt zunächst heutiges Datum, Profil-Modalität und Calling AE als Station AE ab. Bei null Treffern testet DCMSim zusätzlich ohne Station AE und zeigt beide Trefferzahlen als technische Beobachtung. Das ist keine Aussage über eine fehlerhafte RIS-Konfiguration.
+**Modalität prüfen** führt Worklist und Store nacheinander aus. Der Worklist-Kanal bestimmt, ob Modalität und Station AE aus dem Profil übernommen, fest gesetzt oder ausgelassen werden. Bei null Treffern erweitert DCMSim die Anfrage **nicht automatisch**. Erst **Breite Worklist-Diagnose starten** sendet ausdrücklich eine zweite Anfrage ohne Station-AE- und Modalitätsfilter; das heutige Datum bleibt als Datenminimierung erhalten. Die Trefferzahl ist eine technische Beobachtung, keine Aussage über eine fehlerhafte RIS-Konfiguration.
 
 Der Store-Check erzeugt ein synthetisches Objekt. CT, MR, US, CR und DX verwenden die entsprechende Storage SOP Class; andere Profilmodalitäten verwenden sichtbar gekennzeichnet Secondary Capture. Standard ist Explicit VR Little Endian.
 
@@ -107,4 +114,4 @@ Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetai
 
 Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Retention und Darstellung verwalten. Das gespeicherte Default Calling AE wird bei neuen manuellen DICOM-Tests, Zielen und Modalitätsprofilen vorbelegt. Die kompakte Tabellenansicht wird nach dem Speichern sofort und bei späteren Aufrufen automatisch verwendet. Unter **DICOM** und **Logging** werden die tatsächlich wirksamen Server-Timeouts und das Log Level nur lesbar angezeigt. Diese Werte werden über `DCMSIM_CONNECT_TIMEOUT`, `DCMSIM_ASSOCIATION_TIMEOUT`, `DCMSIM_DIMSE_TIMEOUT` und `DCMSIM_LOG_LEVEL` in der Container-Umgebung gesetzt; Änderungen erfordern einen Neustart. Frühere wirkungslose Browser-Werte für diese Servereinstellungen werden ignoriert.
 
-Unter **Datensicherung** kann die Konfiguration als JSON exportiert und wieder importiert werden. Nach der Dateiauswahl zeigt eine Vorschau die Zahl neuer und bestehender Einträge sowie die Namen der Ziele und Profile, die aktualisiert würden. Erst **Import bestätigen** führt die Änderung aus; **Abbrechen** lässt die Konfiguration unverändert. Der Import aktualisiert Einträge gleichen Namens oder legt neue an; nicht enthaltene Daten werden nicht gelöscht. Dateien mit doppelten Ziel- oder Profilnamen werden abgewiesen. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.
+Unter **Datensicherung** kann die Konfiguration als JSON v2 exportiert und wieder importiert werden. Die Vorschau zählt Standorte, Bereiche, DICOM-Systeme, Worklist-Kanäle und Profile und nennt bestehende fachliche Schlüssel, die aktualisiert würden. Erst **Import bestätigen** führt namensbasierte Upserts aus; **Abbrechen** lässt die Konfiguration unverändert und nicht aufgeführte Einträge werden nie gelöscht. Legacy-Dateien im Format v1 bleiben importierbar und werden in die strukturierte Topologie normalisiert. Doppelte Namen innerhalb einer Konfigurationsgruppe werden abgewiesen. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.

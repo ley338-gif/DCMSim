@@ -12,7 +12,30 @@ import {Modal} from '../components/ui/Overlay'
 import {loadLocalSettings,LocalSettings,saveLocalSettings} from '../settings/localSettings'
 
 function download(blob:Blob,name:string){const url=URL.createObjectURL(blob);const anchor=document.createElement('a');anchor.href=url;anchor.download=name;anchor.click();URL.revokeObjectURL(url)}
-type ImportPreview={configuration:ConfigurationExport;fileName:string;newTargets:number;updatedTargets:string[];newProfiles:number;updatedProfiles:string[]}
+type PreviewGroup={label:string;newItems:string[];updated:string[]}
+type ImportPreview={configuration:ConfigurationExport;fileName:string;groups:PreviewGroup[]}
+const compositeKey=(...parts:string[])=>JSON.stringify(parts)
+const displayPreviewKey=(key:string)=>{try{const parts=JSON.parse(key);return Array.isArray(parts)?parts.join(' / '):key}catch{return key}}
+
+function configurationGroups(configuration:ConfigurationExport){
+ if(configuration.format_version===1)return [{label:'Ziele',names:configuration.targets.map(item=>item.name)},{label:'Profile',names:configuration.modality_profiles.map(item=>item.name)}]
+ return [
+  {label:'Standorte',names:configuration.sites.map(item=>item.name)},
+  {label:'Bereiche',names:configuration.areas.map(item=>compositeKey(item.site_name,item.name))},
+  {label:'DICOM-Systeme',names:configuration.dicom_systems.map(item=>item.name)},
+  {label:'Endpoints',names:configuration.dicom_systems.flatMap(system=>system.endpoints.map(endpoint=>compositeKey(system.name,endpoint.name)))},
+  {label:'Worklist-Kanäle',names:configuration.worklist_channels.map(item=>item.name)},
+  {label:'Profile',names:configuration.modality_profiles.map(item=>item.name)},
+ ]
+ }
+
+ function endpointValues(configuration:ConfigurationExport){
+  if(configuration.format_version!==2)return new Map<string,string>()
+  return new Map(configuration.dicom_systems.flatMap(system=>system.endpoints.map(endpoint=>[
+   compositeKey(system.name,endpoint.name),
+   JSON.stringify([endpoint.host,endpoint.port,endpoint.called_ae,endpoint.service]),
+  ])))
+ }
 
 export function SettingsPage(){
  const queryClient=useQueryClient()
@@ -30,23 +53,31 @@ export function SettingsPage(){
  const backup=()=>run(async()=>{download(await api.databaseBackup(),`dcmsim-backup-${new Date().toISOString().slice(0,10)}.sqlite3`);setNotice({tone:'success',text:'Datenbank-Backup wurde erstellt.'})})
  const importConfig=(event:ChangeEvent<HTMLInputElement>)=>{const file=event.target.files?.[0];event.target.value='';if(!file)return;void run(async()=>{
   const configuration=JSON.parse(await file.text()) as ConfigurationExport
-  if(configuration?.format_version!==1||!Array.isArray(configuration.targets)||!Array.isArray(configuration.modality_profiles)||[...configuration.targets,...configuration.modality_profiles].some(item=>typeof item?.name!=='string'))throw new Error('Die Datei enthält keine unterstützte DCMSim-Konfiguration.')
-  const targetNames=configuration.targets.map(item=>item.name)
-  const profileNames=configuration.modality_profiles.map(item=>item.name)
-  if(new Set(targetNames).size!==targetNames.length||new Set(profileNames).size!==profileNames.length)throw new Error('Die Importdatei enthält doppelte Ziel- oder Profilnamen.')
-  const current=await api.exportConfiguration()
-  const existingTargets=new Set(current.targets.map(item=>item.name))
-  const existingProfiles=new Set(current.modality_profiles.map(item=>item.name))
-  const updatedTargets=targetNames.filter(name=>existingTargets.has(name))
-  const updatedProfiles=profileNames.filter(name=>existingProfiles.has(name))
+  if(!configuration||![1,2].includes(configuration.format_version)||!Array.isArray(configuration.modality_profiles))throw new Error('Die Datei enthält keine unterstützte DCMSim-Konfiguration (v1 oder v2).')
+  const groups=configurationGroups(configuration)
+  if(groups.some(group=>new Set(group.names).size!==group.names.length))throw new Error('Die Importdatei enthält doppelte Namen innerhalb einer Konfigurationsgruppe.')
+  const [current,currentTargets]=await Promise.all([api.exportConfiguration(),configuration.format_version===1?api.targets():Promise.resolve([])])
+  const existing=new Map(configurationGroups(current).map(group=>[group.label,new Set(group.names)]))
+  if(configuration.format_version===1)existing.set('Ziele',new Set(currentTargets.map(target=>target.name)))
+  const importedEndpoints=endpointValues(configuration)
+  const currentEndpoints=endpointValues(current)
   setImportError('')
-  setPendingImport({configuration,fileName:file.name,newTargets:targetNames.length-updatedTargets.length,updatedTargets,newProfiles:profileNames.length-updatedProfiles.length,updatedProfiles})
+  setPendingImport({configuration,fileName:file.name,groups:groups.map(group=>{
+   const existingNames=existing.get(group.label)
+   const newItems=group.names.filter(name=>!existingNames?.has(name))
+   const updated=group.label==='Endpoints'
+    ?group.names.filter(name=>existingNames?.has(name)&&importedEndpoints.get(name)!==currentEndpoints.get(name))
+    :group.names.filter(name=>existingNames?.has(name))
+   return {label:group.label,newItems,updated}
+  })})
  })}
  const confirmImport=async()=>{if(!pendingImport||busy)return;setBusy(true);setImportError('');try{
   const summary=await api.importConfiguration(pendingImport.configuration)
-  await Promise.all([queryClient.invalidateQueries({queryKey:['targets']}),queryClient.invalidateQueries({queryKey:['target-statuses']}),queryClient.invalidateQueries({queryKey:['modality-profiles']})])
+  await Promise.all(['targets','target-statuses','sites','areas','dicom-systems','dicom-endpoints','worklist-channels','modality-profiles'].map(key=>queryClient.invalidateQueries({queryKey:[key]})))
   setPendingImport(undefined)
-  setNotice({tone:'success',text:`Import abgeschlossen: ${summary.created_targets} Ziele und ${summary.created_profiles} Profile neu; ${summary.updated_targets} Ziele und ${summary.updated_profiles} Profile aktualisiert.`})
+  const created=(summary.created_targets??0)+(summary.created_sites??0)+(summary.created_areas??0)+(summary.created_systems??0)+(summary.created_endpoints??0)+(summary.created_channels??0)+summary.created_profiles
+  const updated=(summary.updated_targets??0)+(summary.updated_sites??0)+(summary.updated_areas??0)+(summary.updated_systems??0)+(summary.updated_endpoints??0)+(summary.updated_channels??0)+summary.updated_profiles
+  setNotice({tone:'success',text:`Import abgeschlossen: ${created} Einträge neu; ${updated} Einträge aktualisiert.`})
  }catch(error){setImportError(error instanceof Error?error.message:'Import fehlgeschlagen.')}finally{setBusy(false)}}
  const purge=()=>{if(!confirm(`Historieneinträge löschen, die älter als ${value.retention} Tage sind?`))return;void run(async()=>{saveLocalSettings(value);const result=await api.purgeHistory(value.retention);await queryClient.invalidateQueries({queryKey:['runs']});setNotice({tone:'success',text:`${result.deleted_count} alte Historieneinträge wurden gelöscht.`})})}
  return <>
@@ -64,10 +95,10 @@ export function SettingsPage(){
   <Modal open={Boolean(pendingImport)} title="Konfigurationsimport prüfen" onClose={()=>{if(!busy)setPendingImport(undefined)}}>
    {pendingImport&&<div className="import-preview">
     <p>Die Datei <strong>{pendingImport.fileName}</strong> enthält folgende Änderungen:</p>
-    <ul><li>{pendingImport.newTargets} neue Ziele, {pendingImport.updatedTargets.length} bestehende Ziele</li><li>{pendingImport.newProfiles} neue Profile, {pendingImport.updatedProfiles.length} bestehende Profile</li></ul>
-    {pendingImport.updatedTargets.length>0&&<p><strong>Ziele, die aktualisiert werden:</strong> {pendingImport.updatedTargets.join(', ')}</p>}
-    {pendingImport.updatedProfiles.length>0&&<p><strong>Profile, die aktualisiert werden:</strong> {pendingImport.updatedProfiles.join(', ')}</p>}
-    <AlertBox tone="warning">Bestehende Einträge mit gleichem Namen werden überschrieben. Nicht aufgeführte Ziele und Profile bleiben unverändert.</AlertBox>
+    <ul>{pendingImport.groups.map(group=><li key={group.label}>{group.newItems.length} neue {group.label}, {group.updated.length} {group.label==='Endpoints'?'zu aktualisierende':'bestehende'} {group.label}</li>)}</ul>
+    {pendingImport.groups.filter(group=>group.newItems.length>0).map(group=><p key={`new-${group.label}`}><strong>{group.label}, die neu angelegt werden:</strong> {group.newItems.map(displayPreviewKey).join(', ')}</p>)}
+    {pendingImport.groups.filter(group=>group.updated.length>0).map(group=><p key={group.label}><strong>{group.label}, die aktualisiert werden:</strong> {group.updated.map(displayPreviewKey).join(', ')}</p>)}
+    <AlertBox tone="warning">Bestehende Einträge mit gleichem fachlichem Schlüssel werden überschrieben. Nicht aufgeführte Einträge bleiben unverändert.</AlertBox>
     {importError&&<AlertBox tone="error">{importError}</AlertBox>}
     <div className="form-actions"><Button type="button" variant="ghost" disabled={busy} onClick={()=>setPendingImport(undefined)}>Abbrechen</Button><Button type="button" loading={busy} onClick={()=>void confirmImport()}>Import bestätigen</Button></div>
    </div>}

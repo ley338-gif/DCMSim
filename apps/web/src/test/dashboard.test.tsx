@@ -15,6 +15,8 @@ afterEach(()=>vi.restoreAllMocks())
 
 it('integrates PACS query targets and runs across the dashboard',async()=>{
  vi.spyOn(api,'targets').mockResolvedValue([target])
+ vi.spyOn(api,'dicomSystems').mockResolvedValue([{id:2,name:'PACS Archiv',created_at:'',updated_at:''}])
+ vi.spyOn(api,'dicomEndpoints').mockResolvedValue([{id:3,system_id:2,name:'PACS Query',service:'QR',host:'127.0.0.1',port:11114,called_ae:'PACSQR',created_at:'',updated_at:''}])
  vi.spyOn(api,'runs').mockResolvedValue(runs)
  vi.spyOn(api,'dashboardSummary').mockResolvedValue({today_total:110,today_success:101,by_type:{qr_find:120,modality_check:80,mwl_find:5,dicom_store:7,dicom_echo:3}})
  vi.spyOn(api,'targetStatuses').mockResolvedValue([{target_id:1,run_id:3,test_type:'dicom_echo',started_at:new Date().toISOString(),duration_ms:50,success:false,status:'DICOM_TIMEOUT',configuration_state:'current'}])
@@ -28,7 +30,7 @@ it('integrates PACS query targets and runs across the dashboard',async()=>{
  expect(screen.getByText('3 Treffer')).toBeVisible()
  expect(screen.getByText('PASS')).toBeVisible()
  expect(screen.getByText('CT Notaufnahme')).toBeVisible()
- expect(screen.getByText('Query/Retrieve-Ziele')).toBeVisible()
+ expect(screen.getByText('Query/Retrieve-Endpoints')).toBeVisible()
  expect(screen.getByText('Fehlgeschlagen')).toBeVisible()
  expect(screen.getByText('110')).toBeVisible()
  expect(screen.getByText('101 erfolgreich')).toBeVisible()
