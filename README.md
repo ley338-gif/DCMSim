@@ -2,7 +2,7 @@
 
 DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
 
-## Funktionen in 0.3.21
+## Funktionen in 0.3.22
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -39,6 +39,7 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - Frontend-Tests laufen mit der korrigierten Vitest-Version 4.1.11; die CI prüft npm-Abhängigkeiten auf moderate und schwerere bekannte Schwachstellen
 - Die Historie filtert optional ganze lokale Kalendertage; der CSV-Export übernimmt denselben Zeitraum
 - Der Konfigurationsimport zeigt neue und zu aktualisierende Einträge vorab und verlangt eine Bestätigung
+- Der Zielstatus benennt den zuletzt geprüften DICOM-Dienst und öffnet direkt den zugehörigen Historieneintrag
 
 ## Start mit Docker
 
