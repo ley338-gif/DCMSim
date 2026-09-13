@@ -31,7 +31,7 @@ Docker zeigt den Container als gesund an, wenn Webdienst und lokale Datenbank an
 
 Unter **Ziele** Name und Host eintragen, benötigte Dienste aktivieren sowie Port, Called AE und Default Calling AE setzen. Worklist, Store und PACS-Suche können unterschiedliche Ports oder Called AEs verwenden. Gespeicherte Ziele erscheinen in den Testformularen; manuelle Eingabe bleibt immer möglich.
 
-Der Zielstatus zeigt den letzten direkt zugeordneten Einzeltest mit Ergebnis und Zeitpunkt. Ohne einen solchen Lauf steht dort **Ungeprüft**. Ein gespeichertes Ziel kann über **Bearbeiten → Verbindung testen** gezielt geprüft werden. Eine kombinierte Modalitätsprüfung kann unterschiedliche Ziele verwenden und wird deshalb weiterhin separat in der Historie dargestellt.
+Der Zielstatus zeigt den letzten direkt zugeordneten Einzeltest mit Ergebnis, Testtyp und Zeitpunkt. Über den verlinkten Testtyp öffnet sich der zugehörige Historieneintrag. Ein erfolgreiches **C-ECHO** belegt nur die Association und C-ECHO-Antwort, nicht einen erfolgreichen C-STORE- oder Worklist-Lauf. Ohne einen Einzeltest steht dort **Ungeprüft**. Ein gespeichertes Ziel kann über **Bearbeiten → Verbindung testen** gezielt geprüft werden. Eine kombinierte Modalitätsprüfung kann unterschiedliche Ziele verwenden und wird deshalb weiterhin separat in der Historie dargestellt.
 
 Wenn Host, verwendeter Dienst-Port, Called AE, Default Calling AE oder der verwendete Dienst seit dem Test geändert wurden, erscheint **Erneut prüfen** statt eines veralteten Erfolgs oder Fehlers. Eine reine Namensänderung ändert den technischen Prüfstatus nicht. Bei älteren Tests ohne gespeicherte Ziel-Momentaufnahme steht **Nicht belegbar**; nach einem neuen Einzeltest erscheint wieder ein aktuelles Ergebnis.
 

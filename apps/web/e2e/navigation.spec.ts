@@ -75,3 +75,15 @@ test('configuration import requires an explicit review before overwriting a targ
  await expect.poll(()=>importCalls).toBe(1)
  await expect(page.getByText(/1 Ziele und 0 Profile aktualisiert/)).toBeVisible()
 })
+
+test('dashboard target status identifies C-ECHO and opens its history',async({page})=>{
+ const target={id:1,name:'PACS Archiv',host:'127.0.0.1',mwl_enabled:false,mwl_port:null,mwl_called_ae:null,store_enabled:true,store_port:104,store_called_ae:'PACS',qr_enabled:false,qr_port:null,qr_called_ae:null,default_calling_ae:'DCMSIM',created_at:'',updated_at:''}
+ await page.route('**/api/targets',route=>route.fulfill({json:[target]}))
+ await page.route('**/api/targets/test-status',route=>route.fulfill({json:[{target_id:1,run_id:9,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:20,success:true,status:'0x0000',configuration_state:'current'}]}))
+ await page.route('**/api/test-runs/9',route=>route.fulfill({json:{id:9,test_type:'dicom_echo',target_id:1,manual_target_json:null,target_snapshot_json:{name:'PACS Archiv',host:'127.0.0.1',port:104,called_ae:'PACS',calling_ae:'DCMSIM'},started_at:'2026-09-12T10:00:00Z',duration_ms:20,success:true,status:'0x0000',result_json:{success:true,status:'0x0000',duration_ms:20}}}))
+ await page.goto('/')
+ const row=page.getByText('PACS Archiv').locator('xpath=ancestor::tr')
+ await expect(row).toContainText('Erfolgreich')
+ await row.getByRole('link',{name:/C-ECHO/}).click()
+ await expect(page).toHaveURL(/\/history\/9$/)
+})

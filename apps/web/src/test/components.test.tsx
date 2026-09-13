@@ -1,5 +1,6 @@
 import {render,screen} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import {MemoryRouter} from 'react-router-dom'
 import {EndpointFields} from '../components/EndpointFields'
 import {ResultPanel} from '../components/ResultPanel'
 import {TechnicalDetails} from '../components/TechnicalDetails'
@@ -13,9 +14,11 @@ it('renders technical dataset elements',async()=>{render(<TechnicalDetails data=
 
 it('renders a presentation context failure with stable code',()=>{render(<ResultPanel result={{success:false,code:'DICOM_NO_PRESENTATION_CONTEXT',message:'No acceptable presentation context',duration_ms:20}}/>);expect(screen.getByText('No acceptable presentation context')).toBeVisible();expect(screen.getAllByText('DICOM_NO_PRESENTATION_CONTEXT').length).toBeGreaterThan(0)})
 
-it('distinguishes untested and successfully tested targets',()=>{const view=render(<TargetTestStatus/>);expect(screen.getByText('Ungeprüft')).toBeVisible();view.rerender(<TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'current'}}/>);expect(screen.getByText('Erfolgreich')).toBeVisible();expect(screen.queryByText('Ungeprüft')).not.toBeInTheDocument()})
+it('distinguishes untested targets and identifies the successful test type',()=>{const view=render(<MemoryRouter><TargetTestStatus/></MemoryRouter>);expect(screen.getByText('Ungeprüft')).toBeVisible();view.rerender(<MemoryRouter><TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'current'}}/></MemoryRouter>);expect(screen.getByText('Erfolgreich')).toBeVisible();expect(screen.queryByText('Ungeprüft')).not.toBeInTheDocument();expect(screen.getByRole('link',{name:/C-ECHO/})).toHaveAttribute('href','/history/2')})
 
-it('asks for a new test when the target configuration changed',()=>{render(<TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'changed'}}/>);expect(screen.getByText('Erneut prüfen')).toBeVisible();expect(screen.getByText('Ziel seit Test geändert')).toBeVisible();expect(screen.queryByText('Erfolgreich')).not.toBeInTheDocument()})
+it('asks for a new test when the target configuration changed',()=>{render(<MemoryRouter><TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'changed'}}/></MemoryRouter>);expect(screen.getByText('Erneut prüfen')).toBeVisible();expect(screen.getByText('Ziel seit Test geändert')).toBeVisible();expect(screen.queryByText('Erfolgreich')).not.toBeInTheDocument();expect(screen.getByRole('link',{name:/C-ECHO/})).toHaveAttribute('href','/history/2')})
 
-it('does not treat a legacy test without snapshot as proof',()=>{render(<TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'unknown'}}/>);expect(screen.getByText('Nicht belegbar')).toBeVisible();expect(screen.queryByText('Erfolgreich')).not.toBeInTheDocument()})
+it('does not treat a legacy test without snapshot as proof',()=>{render(<MemoryRouter><TargetTestStatus status={{target_id:1,run_id:2,test_type:'dicom_echo',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'unknown'}}/></MemoryRouter>);expect(screen.getByText('Nicht belegbar')).toBeVisible();expect(screen.queryByText('Erfolgreich')).not.toBeInTheDocument()})
+
+it('distinguishes a successful C-STORE from C-ECHO',()=>{render(<MemoryRouter><TargetTestStatus status={{target_id:1,run_id:8,test_type:'dicom_store',started_at:'2026-09-12T10:00:00Z',duration_ms:12,success:true,status:'0x0000',configuration_state:'current'}}/></MemoryRouter>);expect(screen.getByRole('link',{name:/C-STORE/})).toHaveAttribute('href','/history/8');expect(screen.queryByText('C-ECHO')).not.toBeInTheDocument()})
 

@@ -8,6 +8,14 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.3.22] - 2026-09-13
+
+### Changed
+
+- Zielstatus auf Übersicht und Zielseite nennt jetzt den Typ des letzten Einzeltests (C-ECHO, Worklist C-FIND, PACS C-FIND oder C-STORE) und verlinkt dessen Historieneintrag.
+- So ist ein erfolgreicher C-ECHO-Test nicht mehr mit einer erfolgreichen Storage- oder Worklist-Prüfung zu verwechseln.
+- Produktversion auf 0.3.22 angehoben.
+
 ## [0.3.21] - 2026-09-12
 
 ### Fixed
