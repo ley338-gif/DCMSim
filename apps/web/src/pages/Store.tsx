@@ -20,6 +20,7 @@ const sopClasses=[['secondary_capture','Secondary Capture'],['ct','CT Image Stor
 
 export function Store(){
  const {data:targets=[]}=useQuery({queryKey:['targets'],queryFn:api.targets})
+ const {data:endpoints=[]}=useQuery({queryKey:['dicom-endpoints'],queryFn:api.dicomEndpoints})
  const [endpoint,setEndpoint]=useState<Endpoint>(()=>({host:'',port:104,called_ae:'',calling_ae:loadLocalSettings().callingAe}))
  const [sop,setSop]=useState('secondary_capture')
  const [syntax,setSyntax]=useState('explicit_vr_little_endian')
@@ -101,7 +102,7 @@ export function Store(){
   <form className="store-layout" onSubmit={submit}>
    <div>
     <SectionCard title="Zielsystem">
-     <TargetSelector value={endpoint} onChange={changeEndpoint} targets={targets} service="store" compact/>
+     <TargetSelector value={endpoint} onChange={changeEndpoint} targets={targets} endpoints={endpoints} service="store" compact/>
      <div className="form-actions"><Button type="button" variant="outline" loading={echoPending} disabled={storePending} icon={<Radio size={16}/>} onClick={testConnection}>Verbindung testen</Button></div>
      {echoError&&<AlertBox tone="error" title="C-ECHO fehlgeschlagen">{echoError}</AlertBox>}
      {echoResult&&<AlertBox tone={echoResult.success?'success':'error'} title={echoResult.success?'C-ECHO erfolgreich':'C-ECHO fehlgeschlagen'}>{echoResult.status??echoResult.code??'—'} · {echoResult.duration_ms} ms{echoResult.message&&` · ${echoResult.message}`}</AlertBox>}

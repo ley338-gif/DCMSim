@@ -88,6 +88,103 @@ class TargetRead(TargetBase):
 ModalityCode = Literal["CT", "MR", "US", "CR", "DX", "OT", "XA", "MG", "NM", "PT"]
 
 
+class NamedNodeBase(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class SiteCreate(NamedNodeBase):
+    pass
+
+
+class SiteRead(NamedNodeBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class AreaCreate(NamedNodeBase):
+    site_id: int
+
+
+class AreaRead(AreaCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class DicomSystemCreate(NamedNodeBase):
+    pass
+
+
+class DicomSystemRead(DicomSystemCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class DicomEndpointCreate(NamedNodeBase):
+    service: Literal["MWL", "STORE", "QR"]
+    host: str
+    port: int = Field(ge=1, le=65535)
+    called_ae: str
+
+    _host = field_validator("host")(validate_host)
+    _called = field_validator("called_ae")(validate_ae)
+
+
+class DicomEndpointRead(DicomEndpointCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    system_id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+FilterMode = Literal["profile", "fixed", "omit"]
+
+
+def validate_worklist_filter_configuration(value):
+    station_value = value.station_ae_fixed_value.strip() if value.station_ae_fixed_value else None
+    modality_value = (
+        value.modality_filter_fixed_value.strip().upper()
+        if value.modality_filter_fixed_value
+        else None
+    )
+    if value.station_ae_mode == "fixed" and not station_value:
+        raise ValueError("Fixed station AE mode needs a value")
+    if value.modality_filter_mode == "fixed" and not modality_value:
+        raise ValueError("Fixed modality filter mode needs a value")
+    if modality_value and modality_value not in ModalityCode.__args__:
+        raise ValueError("Fixed modality filter must be a supported modality code")
+    value.station_ae_fixed_value = validate_ae(station_value) if station_value else None
+    value.modality_filter_fixed_value = modality_value
+    return value
+
+
+class WorklistChannelCreate(NamedNodeBase):
+    area_id: int | None
+    modality_code: ModalityCode
+    mwl_endpoint_id: int
+    station_ae_mode: FilterMode = "profile"
+    station_ae_fixed_value: str | None = None
+    modality_filter_mode: FilterMode = "profile"
+    modality_filter_fixed_value: str | None = None
+
+    @model_validator(mode="after")
+    def fixed_modes_have_values(self):
+        return validate_worklist_filter_configuration(self)
+
+
+class WorklistChannelRead(WorklistChannelCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class ModalityProfileBase(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str | None = Field(default=None, max_length=500)
@@ -97,6 +194,9 @@ class ModalityProfileBase(BaseModel):
     mwl_target_id: int | None = None
     store_enabled: bool = True
     store_target_id: int | None = None
+    area_id: int | None = None
+    worklist_channel_id: int | None = None
+    store_endpoint_id: int | None = None
 
     _calling = field_validator("calling_ae")(validate_ae)
 
@@ -106,10 +206,26 @@ class ModalityProfileCreate(ModalityProfileBase):
     def enabled_services_have_targets(self):
         if not self.mwl_enabled and not self.store_enabled:
             raise ValueError("At least one DICOM service must be enabled")
-        if self.mwl_enabled and self.mwl_target_id is None:
-            raise ValueError("Enabled worklist check needs a target")
-        if self.store_enabled and self.store_target_id is None:
-            raise ValueError("Enabled store check needs a target")
+        service_references = (
+            (
+                self.mwl_enabled,
+                (self.mwl_target_id, self.worklist_channel_id),
+                "worklist",
+            ),
+            (
+                self.store_enabled,
+                (self.store_target_id, self.store_endpoint_id),
+                "store",
+            ),
+        )
+        for enabled, references, label in service_references:
+            reference_count = sum(reference is not None for reference in references)
+            if enabled and reference_count != 1:
+                raise ValueError(
+                    f"Enabled {label} check needs exactly one Legacy or structured target"
+                )
+            if not enabled and reference_count:
+                raise ValueError(f"Disabled {label} check cannot have a target")
         return self
 
 
@@ -145,7 +261,7 @@ class ModalityProfileImport(BaseModel):
         return self
 
 
-class ConfigurationImport(BaseModel):
+class ConfigurationImportV1(BaseModel):
     format_version: Literal[1]
     targets: list[TargetCreate]
     modality_profiles: list[ModalityProfileImport]
@@ -157,6 +273,87 @@ class ConfigurationImport(BaseModel):
             if len(names) != len(set(names)):
                 raise ValueError(f"Duplicate {kind} names in configuration")
         return self
+
+
+class AreaImport(NamedNodeBase):
+    site_name: str
+
+
+class DicomSystemImport(NamedNodeBase):
+    endpoints: list[DicomEndpointCreate]
+
+
+class WorklistChannelImport(NamedNodeBase):
+    site_name: str | None
+    area_name: str | None
+    modality_code: ModalityCode
+    mwl_system_name: str
+    mwl_endpoint_name: str
+    station_ae_mode: FilterMode
+    station_ae_fixed_value: str | None = None
+    modality_filter_mode: FilterMode
+    modality_filter_fixed_value: str | None = None
+
+    @model_validator(mode="after")
+    def fixed_modes_have_values(self):
+        return validate_worklist_filter_configuration(self)
+
+
+class ModalityProfileImportV2(NamedNodeBase):
+    description: str | None = Field(default=None, max_length=500)
+    modality: ModalityCode
+    calling_ae: str
+    site_name: str | None
+    area_name: str | None
+    worklist_channel_name: str | None
+    store_system_name: str | None
+    store_endpoint_name: str | None
+
+    _calling = field_validator("calling_ae")(validate_ae)
+
+    @model_validator(mode="after")
+    def has_active_services(self):
+        if (self.store_system_name is None) != (self.store_endpoint_name is None):
+            raise ValueError("Store references require both system and endpoint names")
+        if self.worklist_channel_name is None and self.store_endpoint_name is None:
+            raise ValueError("At least one DICOM service must be enabled")
+        return self
+
+
+class ConfigurationImportV2(BaseModel):
+    format_version: Literal[2]
+    sites: list[SiteCreate]
+    areas: list[AreaImport]
+    dicom_systems: list[DicomSystemImport]
+    worklist_channels: list[WorklistChannelImport]
+    modality_profiles: list[ModalityProfileImportV2]
+
+    @model_validator(mode="after")
+    def unique_names(self):
+        groups = (
+            ("site", self.sites),
+            ("DICOM system", self.dicom_systems),
+            ("worklist channel", self.worklist_channels),
+            ("modality profile", self.modality_profiles),
+        )
+        for kind, items in groups:
+            names = [item.name for item in items]
+            if len(names) != len(set(names)):
+                raise ValueError(f"Duplicate {kind} names in configuration")
+        area_keys = [(item.site_name, item.name) for item in self.areas]
+        if len(area_keys) != len(set(area_keys)):
+            raise ValueError("Duplicate area names at the same site in configuration")
+        for system in self.dicom_systems:
+            names = [endpoint.name for endpoint in system.endpoints]
+            if len(names) != len(set(names)):
+                raise ValueError(f"Duplicate endpoint names in DICOM system {system.name}")
+        for item in (*self.worklist_channels, *self.modality_profiles):
+            if (item.site_name is None) != (item.area_name is None):
+                raise ValueError("Area references require both site_name and area_name")
+        return self
+
+
+ConfigurationImport = ConfigurationImportV1 | ConfigurationImportV2
 
 
 class HistoryRetentionRequest(BaseModel):
@@ -201,6 +398,7 @@ TransferSyntaxKey = Literal["explicit_vr_little_endian", "implicit_vr_little_end
 
 class ModalityCheckRequest(BaseModel):
     transfer_syntax: TransferSyntaxKey = "explicit_vr_little_endian"
+    diagnostic_broad: bool = False
 
 
 class StoreRequest(Endpoint):

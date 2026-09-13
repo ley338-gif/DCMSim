@@ -8,6 +8,30 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Noch keine Änderungen.
 
+## [0.4.0] - 2026-09-13
+
+### Added
+
+- Strukturierte Topologie mit Standorten, Bereichen, DICOM-Systemen, dienstspezifischen Endpoints und Worklist-Kanälen.
+- Gruppierte Modalitätenansicht einschließlich des sichtbaren Bereichs **Nicht zugeordnet** sowie CRUD-Oberfläche für die Topologie.
+- Worklist-Kanäle können Station AE und Modalitätsfilter jeweils aus dem Profil übernehmen, fest vorgeben oder bewusst nicht senden.
+- Konfigurationsexport v2, Vorschau vor dem Import und weiterhin unterstützter Import des Legacy-Formats v1.
+- Explizit auslösbare breite Worklist-Diagnose für Modalitätschecks; sie wird bei null Treffern nicht automatisch gesendet.
+
+### Changed
+
+- Modalitätsprofile referenzieren einen Worklist-Kanal und einen STORE-Endpoint statt ausschließlich kombinierter Legacy-Ziele.
+- Navigation, Dashboard, Testformulare, E2E-Smokes und Dokumentation verwenden die Begriffe Systeme, Endpoints und Kanäle.
+- Produktversion auf 0.4.0 angehoben.
+
+### Security
+
+- Breite Diagnoseabfragen behalten den Datumsfilter bei, entfernen Station AE und Modalität nur nach einer ausdrücklichen Benutzeraktion und persistieren keine Worklist-Treffer oder patientenbezogenen Filter.
+
+### Migration
+
+- Migration `0006` übernimmt bestehende Ziele verlustfrei als DICOM-Systeme und dienstspezifische Endpoints. Bestehende Profile erhalten, soweit möglich, nicht zugeordnete Worklist-Kanäle und STORE-Endpoints; Legacy-Ziele und Historieneinträge bleiben für Kompatibilität erhalten.
+
 ## [0.3.22] - 2026-09-13
 
 ### Changed

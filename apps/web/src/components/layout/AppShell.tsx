@@ -8,7 +8,7 @@ const navigation=[
  {to:'/worklist',label:'Worklist',icon:Menu},
  {to:'/pacs-store',label:'PACS Store',icon:UploadCloud},
  {to:'/pacs-query',label:'PACS-Suche',icon:Search},
- {to:'/targets',label:'Ziele',icon:Server},
+ {to:'/systems',label:'Systeme',icon:Server},
  {to:'/modalities',label:'Modalitäten',icon:Stethoscope},
  {to:'/history',label:'Historie',icon:Clock3},
  {to:'/settings',label:'Einstellungen',icon:Settings},

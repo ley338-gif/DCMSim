@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 from pydicom.errors import InvalidDicomError
-from sqlalchemy import desc, select, update
+from sqlalchemy import delete, desc, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.background import BackgroundTask
@@ -30,15 +30,32 @@ from app.dicom.datasets import (
 )
 from app.dicom.errors import DicomError
 from app.dicom.network import echo, find_studies, find_worklist, store_dataset
-from app.models import ModalityProfile, Target, TestRun
+from app.models import (
+    Area,
+    DicomEndpoint,
+    DicomSystem,
+    ModalityProfile,
+    Site,
+    Target,
+    TestRun,
+    WorklistChannel,
+)
 from app.schemas.common import (
+    AreaCreate,
+    AreaRead,
     ConfigurationImport,
+    DicomEndpointCreate,
+    DicomEndpointRead,
+    DicomSystemCreate,
+    DicomSystemRead,
     EchoRequest,
     Endpoint,
     HistoryRetentionRequest,
     ModalityCheckRequest,
     ModalityProfileCreate,
     ModalityProfileRead,
+    SiteCreate,
+    SiteRead,
     StoreRequest,
     StudyQueryRequest,
     TargetCreate,
@@ -46,6 +63,8 @@ from app.schemas.common import (
     TargetTestStatusRead,
     TestRunPage,
     TestRunRead,
+    WorklistChannelCreate,
+    WorklistChannelRead,
     WorklistRequest,
 )
 from app.services.diagnostics import recommendation_for
@@ -61,6 +80,10 @@ from app.services.operations import (
     export_configuration,
     import_configuration,
     purge_history,
+)
+from app.services.topology_validation import (
+    validate_endpoint_service_change,
+    validate_worklist_channel_identity_change,
 )
 
 router = APIRouter(prefix="/api")
@@ -134,6 +157,262 @@ def database_backup(db: Session = Depends(get_db)):
     )
 
 
+def _commit_named(db: Session, duplicate_message: str) -> None:
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, duplicate_message) from exc
+
+
+@router.get("/sites", response_model=list[SiteRead])
+def list_sites(db: Session = Depends(get_db)):
+    return db.scalars(select(Site).order_by(Site.name)).all()
+
+
+@router.post("/sites", response_model=SiteRead, status_code=201)
+def create_site(payload: SiteCreate, db: Session = Depends(get_db)):
+    item = Site(**payload.model_dump())
+    db.add(item)
+    _commit_named(db, "A site with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.get("/sites/{item_id}", response_model=SiteRead)
+def get_site(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(Site, item_id)
+    if not item:
+        raise HTTPException(404, "Site not found")
+    return item
+
+
+@router.put("/sites/{item_id}", response_model=SiteRead)
+def update_site(item_id: int, payload: SiteCreate, db: Session = Depends(get_db)):
+    item = get_site(item_id, db)
+    item.name = payload.name
+    _commit_named(db, "A site with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.delete("/sites/{item_id}", status_code=204)
+def delete_site(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(Site, item_id)
+    if not item:
+        raise HTTPException(404, "Site not found")
+    area_ids = select(Area.id).where(Area.site_id == item_id)
+    db.execute(update(ModalityProfile).where(ModalityProfile.area_id.in_(area_ids)).values(area_id=None))
+    db.execute(update(WorklistChannel).where(WorklistChannel.area_id.in_(area_ids)).values(area_id=None))
+    db.execute(delete(Area).where(Area.site_id == item_id))
+    db.delete(item)
+    db.commit()
+
+
+@router.get("/areas", response_model=list[AreaRead])
+def list_areas(site_id: int | None = None, db: Session = Depends(get_db)):
+    query = select(Area)
+    if site_id is not None:
+        query = query.where(Area.site_id == site_id)
+    return db.scalars(query.order_by(Area.name)).all()
+
+
+@router.post("/areas", response_model=AreaRead, status_code=201)
+def create_area(payload: AreaCreate, db: Session = Depends(get_db)):
+    if not db.get(Site, payload.site_id):
+        raise HTTPException(422, "Configured site does not exist")
+    item = Area(**payload.model_dump())
+    db.add(item)
+    _commit_named(db, "An area with this name already exists at the site")
+    db.refresh(item)
+    return item
+
+
+@router.get("/areas/{item_id}", response_model=AreaRead)
+def get_area(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(Area, item_id)
+    if not item:
+        raise HTTPException(404, "Area not found")
+    return item
+
+
+@router.put("/areas/{item_id}", response_model=AreaRead)
+def update_area(item_id: int, payload: AreaCreate, db: Session = Depends(get_db)):
+    item = get_area(item_id, db)
+    if not db.get(Site, payload.site_id):
+        raise HTTPException(422, "Configured site does not exist")
+    item.name, item.site_id = payload.name, payload.site_id
+    _commit_named(db, "An area with this name already exists at the site")
+    db.refresh(item)
+    return item
+
+
+@router.delete("/areas/{item_id}", status_code=204)
+def delete_area(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(Area, item_id)
+    if not item:
+        raise HTTPException(404, "Area not found")
+    db.execute(update(ModalityProfile).where(ModalityProfile.area_id == item_id).values(area_id=None))
+    db.execute(update(WorklistChannel).where(WorklistChannel.area_id == item_id).values(area_id=None))
+    db.delete(item)
+    db.commit()
+
+
+@router.get("/dicom-systems", response_model=list[DicomSystemRead])
+def list_dicom_systems(db: Session = Depends(get_db)):
+    return db.scalars(select(DicomSystem).order_by(DicomSystem.name)).all()
+
+
+@router.post("/dicom-systems", response_model=DicomSystemRead, status_code=201)
+def create_dicom_system(payload: DicomSystemCreate, db: Session = Depends(get_db)):
+    item = DicomSystem(**payload.model_dump())
+    db.add(item)
+    _commit_named(db, "A DICOM system with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.get("/dicom-systems/{item_id}", response_model=DicomSystemRead)
+def get_dicom_system(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(DicomSystem, item_id)
+    if not item:
+        raise HTTPException(404, "DICOM system not found")
+    return item
+
+
+@router.put("/dicom-systems/{item_id}", response_model=DicomSystemRead)
+def update_dicom_system(item_id: int, payload: DicomSystemCreate, db: Session = Depends(get_db)):
+    item = get_dicom_system(item_id, db)
+    item.name = payload.name
+    _commit_named(db, "A DICOM system with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.delete("/dicom-systems/{item_id}", status_code=204)
+def delete_dicom_system(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(DicomSystem, item_id)
+    if not item:
+        raise HTTPException(404, "DICOM system not found")
+    endpoint_ids = select(DicomEndpoint.id).where(DicomEndpoint.system_id == item_id)
+    if db.scalar(select(WorklistChannel.id).where(WorklistChannel.mwl_endpoint_id.in_(endpoint_ids))):
+        raise HTTPException(409, "DICOM system is still used by a worklist channel")
+    db.execute(update(ModalityProfile).where(ModalityProfile.store_endpoint_id.in_(endpoint_ids)).values(store_endpoint_id=None))
+    db.execute(delete(DicomEndpoint).where(DicomEndpoint.system_id == item_id))
+    db.delete(item)
+    db.commit()
+
+
+@router.get("/dicom-endpoints", response_model=list[DicomEndpointRead])
+def list_dicom_endpoints(system_id: int | None = None, service: str | None = None, db: Session = Depends(get_db)):
+    query = select(DicomEndpoint)
+    if system_id is not None:
+        query = query.where(DicomEndpoint.system_id == system_id)
+    if service is not None:
+        query = query.where(DicomEndpoint.service == service.upper())
+    return db.scalars(query.order_by(DicomEndpoint.name)).all()
+
+
+@router.post("/dicom-systems/{system_id}/endpoints", response_model=DicomEndpointRead, status_code=201)
+def create_dicom_endpoint(system_id: int, payload: DicomEndpointCreate, db: Session = Depends(get_db)):
+    if not db.get(DicomSystem, system_id):
+        raise HTTPException(422, "Configured DICOM system does not exist")
+    item = DicomEndpoint(system_id=system_id, **payload.model_dump())
+    db.add(item)
+    _commit_named(db, "An endpoint with this name already exists in the system")
+    db.refresh(item)
+    return item
+
+
+@router.get("/dicom-endpoints/{item_id}", response_model=DicomEndpointRead)
+def get_dicom_endpoint(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(DicomEndpoint, item_id)
+    if not item:
+        raise HTTPException(404, "DICOM endpoint not found")
+    return item
+
+
+@router.put("/dicom-endpoints/{item_id}", response_model=DicomEndpointRead)
+def update_dicom_endpoint(item_id: int, payload: DicomEndpointCreate, db: Session = Depends(get_db)):
+    item = get_dicom_endpoint(item_id, db)
+    validate_endpoint_service_change(db, item.id, item.service, payload.service)
+    for key, value in payload.model_dump().items():
+        setattr(item, key, value)
+    _commit_named(db, "An endpoint with this name already exists in the system")
+    db.refresh(item)
+    return item
+
+
+@router.delete("/dicom-endpoints/{item_id}", status_code=204)
+def delete_dicom_endpoint(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(DicomEndpoint, item_id)
+    if not item:
+        raise HTTPException(404, "DICOM endpoint not found")
+    if db.scalar(select(WorklistChannel.id).where(WorklistChannel.mwl_endpoint_id == item_id)):
+        raise HTTPException(409, "Endpoint is still used by a worklist channel")
+    db.execute(update(ModalityProfile).where(ModalityProfile.store_endpoint_id == item_id).values(store_endpoint_id=None))
+    db.delete(item)
+    db.commit()
+
+
+def _validate_channel(payload: WorklistChannelCreate, db: Session) -> None:
+    if payload.area_id is not None and not db.get(Area, payload.area_id):
+        raise HTTPException(422, "Configured area does not exist")
+    endpoint = db.get(DicomEndpoint, payload.mwl_endpoint_id)
+    if not endpoint or endpoint.service != "MWL":
+        raise HTTPException(422, "Worklist channel requires an MWL endpoint")
+
+
+@router.get("/worklist-channels", response_model=list[WorklistChannelRead])
+def list_worklist_channels(area_id: int | None = None, db: Session = Depends(get_db)):
+    query = select(WorklistChannel)
+    if area_id is not None:
+        query = query.where(WorklistChannel.area_id == area_id)
+    return db.scalars(query.order_by(WorklistChannel.name)).all()
+
+
+@router.post("/worklist-channels", response_model=WorklistChannelRead, status_code=201)
+def create_worklist_channel(payload: WorklistChannelCreate, db: Session = Depends(get_db)):
+    _validate_channel(payload, db)
+    item = WorklistChannel(**payload.model_dump())
+    db.add(item)
+    _commit_named(db, "A worklist channel with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.get("/worklist-channels/{item_id}", response_model=WorklistChannelRead)
+def get_worklist_channel(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(WorklistChannel, item_id)
+    if not item:
+        raise HTTPException(404, "Worklist channel not found")
+    return item
+
+
+@router.put("/worklist-channels/{item_id}", response_model=WorklistChannelRead)
+def update_worklist_channel(item_id: int, payload: WorklistChannelCreate, db: Session = Depends(get_db)):
+    item = get_worklist_channel(item_id, db)
+    _validate_channel(payload, db)
+    validate_worklist_channel_identity_change(
+        db, item.id, payload.area_id, payload.modality_code
+    )
+    for key, value in payload.model_dump().items():
+        setattr(item, key, value)
+    _commit_named(db, "A worklist channel with this name already exists")
+    db.refresh(item)
+    return item
+
+
+@router.delete("/worklist-channels/{item_id}", status_code=204)
+def delete_worklist_channel(item_id: int, db: Session = Depends(get_db)):
+    item = db.get(WorklistChannel, item_id)
+    if not item:
+        raise HTTPException(404, "Worklist channel not found")
+    db.execute(update(ModalityProfile).where(ModalityProfile.worklist_channel_id == item_id).values(worklist_channel_id=None))
+    db.delete(item)
+    db.commit()
+
+
 @router.get("/targets", response_model=list[TargetRead])
 def list_targets(db: Session = Depends(get_db)):
     return db.scalars(select(Target).order_by(Target.name)).all()
@@ -201,18 +480,31 @@ def delete_target(target_id: int, db: Session = Depends(get_db)):
 
 
 def _validate_profile_targets(payload: ModalityProfileCreate, db: Session) -> None:
-    checks = (
-        (payload.mwl_enabled, payload.mwl_target_id, "mwl", "worklist"),
-        (payload.store_enabled, payload.store_target_id, "store", "store"),
-    )
-    for enabled, target_id, attribute, label in checks:
-        if not enabled:
-            continue
-        target = db.get(Target, target_id)
+    if payload.mwl_enabled and payload.worklist_channel_id is not None:
+        channel = db.get(WorklistChannel, payload.worklist_channel_id)
+        if not channel:
+            raise HTTPException(422, "Configured worklist channel does not exist")
+        if channel.area_id != payload.area_id:
+            raise HTTPException(422, "Worklist channel belongs to a different area")
+        if channel.modality_code != payload.modality:
+            raise HTTPException(422, "Profile modality does not match worklist channel")
+    elif payload.mwl_enabled:
+        target = db.get(Target, payload.mwl_target_id)
         if not target:
-            raise HTTPException(422, f"Configured {label} target does not exist")
-        if not getattr(target, f"{attribute}_enabled"):
-            raise HTTPException(422, f"Selected target does not support {label}")
+            raise HTTPException(422, "Configured worklist target does not exist")
+        if not target.mwl_enabled:
+            raise HTTPException(422, "Selected target does not support worklist")
+
+    if payload.store_enabled and payload.store_endpoint_id is not None:
+        store_endpoint = db.get(DicomEndpoint, payload.store_endpoint_id)
+        if not store_endpoint or store_endpoint.service != "STORE":
+            raise HTTPException(422, "Profile requires a STORE endpoint")
+    elif payload.store_enabled:
+        target = db.get(Target, payload.store_target_id)
+        if not target:
+            raise HTTPException(422, "Configured store target does not exist")
+        if not target.store_enabled:
+            raise HTTPException(422, "Selected target does not support store")
 
 
 @router.get("/modality-profiles", response_model=list[ModalityProfileRead])
@@ -277,6 +569,10 @@ def check_modality_profile(
     profile = db.get(ModalityProfile, profile_id)
     if not profile:
         raise HTTPException(404, "Modality profile not found")
+    if payload.diagnostic_broad:
+        return run_modality_check(
+            db, profile, payload.transfer_syntax, diagnostic_broad=True
+        )
     return run_modality_check(db, profile, payload.transfer_syntax)
 
 

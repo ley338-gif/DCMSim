@@ -29,7 +29,7 @@ C-MOVE ist nicht bereits implementiert oder freigeschaltet, nur weil eine PACS-S
 
 Explicit VR Little Endian und Implicit VR Little Endian werden für synthetische Objekte unterstützt. Bei Uploads wird die in der Datei deklarierte Transfer Syntax angefordert. Komprimierte Uploads können gesendet werden, wenn pydicom sie lesen kann und der SCP den Context akzeptiert; DCMSim transkodiert nicht.
 
-MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Accession Number und Patient Name sowie eine Broad Query. Die PACS-Suche unterstützt Study Root C-FIND auf Studienebene mit Studiendatum, Modalität, Patient ID, Accession Number und Patient Name. Abrufdienste, HL7 und produktive SCP-Dienste sind nicht unterstützt.
+MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Accession Number und Patient Name sowie eine manuell ausgelöste Broad Query. Worklist-Kanäle verbinden einen MWL-Endpoint mit einem optionalen Bereich und einem Modalitätstyp. Für Scheduled Station AE Title und Modalität kann der Kanal jeweils den Profilwert übernehmen, einen festen Wert verwenden oder den Matching Key weglassen. Der kombinierte Modalitätscheck verbreitert eine Abfrage bei null Treffern nicht automatisch; eine explizite breite Diagnose behält das Datum bei und entfernt Station AE und Modalität erst nach einer Benutzeraktion. Die PACS-Suche unterstützt Study Root C-FIND auf Studienebene mit Studiendatum, Modalität, Patient ID, Accession Number und Patient Name. Abrufdienste, HL7 und produktive SCP-Dienste sind nicht unterstützt.
 
 ## Modalitätscheck
 

@@ -93,18 +93,18 @@ def test_combined_modality_check_succeeds_and_persists_parent_history(
     assert "entries" not in run.result_json["worklist"]
 
 
-def test_zero_worklist_results_retry_without_station_ae(profile_and_db, monkeypatch):
+def test_zero_worklist_results_do_not_retry_automatically(profile_and_db, monkeypatch):
     profile, database = profile_and_db
-    counts = iter([0, 18])
+    calls = []
 
     def find(_endpoint, query):
-        count = next(counts)
+        calls.append(query)
         station = query.ScheduledProcedureStepSequence[0].ScheduledStationAETitle
-        assert station == ("APLIO02" if count == 0 else "")
+        assert station == "APLIO02"
         return {
             "success": True,
             "status": "0x0000",
-            "count": count,
+            "count": 0,
             "entries": [],
             "duration_ms": 4,
             "steps": ["Association accepted"],
@@ -114,9 +114,40 @@ def test_zero_worklist_results_retry_without_station_ae(profile_and_db, monkeypa
     monkeypatch.setattr(modality_checks, "store_dataset", successful_store)
     result = modality_checks.run_modality_check(database, profile)
     assert result["worklist"]["count"] == 0
-    assert result["worklist"]["diagnostic_retry"]["count"] == 18
-    assert "without Station AE, 18 entries" in result["worklist"]["observation"]
+    assert len(calls) == 1
+    assert "diagnostic_retry" not in result["worklist"]
+    assert result["worklist"]["privacy"] == "No automatic broad query was sent"
     assert result["overall"] == "success"
+
+
+def test_explicit_broad_diagnostic_keeps_date_filter_and_omits_patient_filters(
+    profile_and_db, monkeypatch
+):
+    profile, database = profile_and_db
+    queries = []
+
+    def find(_endpoint, query):
+        queries.append(query)
+        return {
+            "success": True,
+            "status": "0x0000",
+            "count": 0 if len(queries) == 1 else 18,
+            "entries": [],
+            "duration_ms": 4,
+            "steps": ["Association accepted"],
+        }
+
+    monkeypatch.setattr(modality_checks, "find_worklist", find)
+    monkeypatch.setattr(modality_checks, "store_dataset", successful_store)
+    result = modality_checks.run_modality_check(database, profile, diagnostic_broad=True)
+
+    assert len(queries) == 2
+    broad_step = queries[1].ScheduledProcedureStepSequence[0]
+    assert broad_step.ScheduledProcedureStepStartDate
+    assert broad_step.ScheduledStationAETitle == ""
+    assert broad_step.Modality == ""
+    assert result["worklist"]["diagnostic_retry"]["explicit_broad_query"] is True
+    assert set(result["worklist"]["diagnostic_retry"]["active_filters"]) == {"date"}
 
 
 @pytest.mark.parametrize("failed_service", ["worklist", "store"])
@@ -143,6 +174,18 @@ def test_partial_failure_makes_overall_result_fail(profile_and_db, monkeypatch, 
     assert result["overall"] == "failure"
     assert result[failed_service]["success"] is False
     assert result["status"] == "FAIL"
+
+
+def test_combined_modality_check_fails_when_no_service_is_active(profile_and_db):
+    profile, database = profile_and_db
+    profile.mwl_enabled = False
+    profile.store_enabled = False
+
+    result = modality_checks.run_modality_check(database, profile)
+
+    assert result["success"] is False
+    assert result["status"] == "FAIL"
+    assert result["overall"] == "failure"
 
 
 def test_missing_target_is_reported_without_network_call(profile_and_db, monkeypatch):
