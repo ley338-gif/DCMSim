@@ -24,12 +24,13 @@ function setup(){
 
 afterEach(()=>vi.restoreAllMocks())
 
-it('shows organizational and technical topology with understandable endpoint details',async()=>{
+it('shows only organizational nodes and DICOM systems without channel bookkeeping',async()=>{
  setup()
  expect(await screen.findByRole('heading',{name:'Standorte und DICOM-Systeme'})).toBeVisible()
  expect(await screen.findByText('Klinikum Nord')).toBeVisible()
  expect(screen.getByText('Radiologie')).toBeVisible()
- expect(screen.getByText(/CT Worklist/)).toBeVisible()
+ expect(screen.queryByText(/CT Worklist/)).not.toBeInTheDocument()
+ expect(screen.queryByRole('button',{name:'Kanal'})).not.toBeInTheDocument()
  expect(screen.getByText('RIS/PACS')).toBeVisible()
  const technicalSection=screen.getByRole('heading',{name:'Technische DICOM-Systeme'}).closest('section')
  expect(technicalSection).not.toBeNull()
@@ -41,8 +42,9 @@ it('creates a site through an accessible modal and refreshes topology',async()=>
  const create=vi.spyOn(api,'createSite').mockResolvedValue(site)
  setup()
  await userEvent.click(await screen.findByRole('button',{name:'Standort hinzufügen'}))
- await userEvent.type(screen.getByLabelText('Standortname'),'Klinikum Süd')
- await userEvent.click(screen.getByRole('button',{name:'Speichern'}))
+ const dialog=await screen.findByRole('dialog',{name:'Neu: Standort'})
+ await userEvent.type(within(dialog).getByLabelText('Standortname'),'Klinikum Süd')
+ await userEvent.click(within(dialog).getByRole('button',{name:'Speichern'}))
  await waitFor(()=>expect(create).toHaveBeenCalledWith({name:'Klinikum Süd'}))
 })
 

@@ -6,7 +6,17 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 ### Added
 
-- Noch keine Änderungen.
+- Direkte Modalitätskonfiguration mit MWL-Endpoint, Station-AE-/Modalitätsfilter und STORE-Endpoint; die API orchestriert dafür interne Worklist-Kanäle.
+- Migration `0007` kennzeichnet intern verwaltete Worklist-Kanäle explizit.
+
+### Changed
+
+- **Systeme** verwaltet nur noch Standorte, Bereiche, DICOM-Systeme und Endpoints. Worklist-Kanäle bleiben ein kompatibles internes/API-Modell, sind aber kein eigener normaler UI-Arbeitsschritt mehr.
+- Die Modalitätsübersicht nennt direkte Worklist- und Store-Ziele statt Kanalnamen.
+
+### Fixed
+
+- Interne Kanäle werden nur bei vollständiger semantischer Übereinstimmung wiederverwendet und nur unreferenziert bereinigt; manuell verwaltete oder geteilte Kanäle werden weder umverdrahtet noch automatisch gelöscht.
 
 ## [0.4.0] - 2026-09-13
 

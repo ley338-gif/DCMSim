@@ -8,10 +8,10 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
 - sechs Storage SOP Classes, Explicit und Implicit VR Little Endian
 - strukturierte Systeme mit fester Hierarchie `Standort → Bereich → Modalität` und `DICOM-System → Endpoint`
-- dienstspezifische MWL-, STORE- und QR-Endpoints sowie Worklist-Kanäle zwischen Bereich und MWL-Endpoint
+- dienstspezifische MWL-, STORE- und QR-Endpoints; Modalitäten konfigurieren MWL- und STORE-Ziele direkt
 - gespeicherte Legacy-Ziele als kompatibler Fallback, C-ECHO und lokale SQLite-Testhistorie
 - stabile Fehlercodes für Verbindung, Association, Timeout und Presentation Context
-- nach Standort und Bereich gruppierte Modalitätsprofile mit Worklist-Kanal und STORE-Endpoint; fehlende Zuordnungen bleiben sichtbar
+- nach Standort und Bereich gruppierte Modalitätsprofile mit direkten Worklist- und Store-Zielen; fehlende Zuordnungen bleiben sichtbar
 - manueller kombinierter Modalitätscheck mit Worklist-, Store- und Gesamtergebnis
 - ausschließlich explizit gestartete breite MWL-Diagnose bei null Treffern; keine automatische Ausweitung der Abfrage
 - synthetische, SOP-spezifische Testobjekte für SC, CT, MR, US, CR und DX
@@ -78,7 +78,7 @@ npm run dev
 
 Konfiguration erfolgt über die Variablen aus `.env.example`. Backend-Tests: `pytest`; Backend-Lint: `ruff check apps/api`; Frontend-Prüfung: `npm run lint && npm run typecheck && npm test -- --run && npm run build`. Der Standard-Datenpfad im Container ist `/data/dcmsim.db`.
 
-Unterstützt werden C-ECHO SCU, MWL C-FIND SCU, Study Root C-FIND SCU und C-STORE SCU. Für strukturierte Profile zuerst unter **Systeme** Standorte/Bereiche sowie DICOM-Systeme/Endpoints anlegen und beides über einen Worklist-Kanal verbinden. Bestehende Ziele bleiben nach dem Upgrade als **Legacy** auswählbar. Details stehen in der [DICOM Support Matrix](docs/dicom-support.md). Bedienung: [User Manual](docs/user-manual.md). Fehleranalyse: [Troubleshooting](docs/troubleshooting.md).
+Unterstützt werden C-ECHO SCU, MWL C-FIND SCU, Study Root C-FIND SCU und C-STORE SCU. Für strukturierte Profile zuerst unter **Systeme** Standorte/Bereiche sowie DICOM-Systeme/Endpoints anlegen und die gewünschten MWL-/STORE-Endpoints anschließend direkt unter **Modalitäten** auswählen. Bestehende Ziele bleiben nach dem Upgrade als **Legacy** verständlich und bearbeitbar. Details stehen in der [DICOM Support Matrix](docs/dicom-support.md). Bedienung: [User Manual](docs/user-manual.md). Fehleranalyse: [Troubleshooting](docs/troubleshooting.md).
 
 DCMSim bleibt ein leichtgewichtiges, lokales und nicht authentifiziertes Diagnosewerkzeug. Die feste Hierarchie dient der reproduzierbaren Auswahl für Tests, nicht als vollständiges Geräte- oder Organisationsregister. Mehrbenutzerbetrieb, Authentifizierung, Audit, Dokumente und frei modellierbare Beziehungen gehören zur Produktgrenze des Healthcare Node Registry (HNR), nicht zu DCMSim.
 

@@ -164,7 +164,7 @@ def _normalize_v1_import(db: Session, payload, targets: dict[str, Target]) -> No
             channel_name = suffixed_node_name(item.name, "Worklist")
             channel = channels.get(channel_name)
             if channel is None:
-                channel = WorklistChannel(name=channel_name)
+                channel = WorklistChannel(name=channel_name, is_internal=True)
                 db.add(channel)
                 channels[channel_name] = channel
             else:
@@ -369,7 +369,7 @@ def _import_configuration_v2(db: Session, payload) -> dict:
         }
         channel = channels.get(value.name)
         if channel is None:
-            channel = WorklistChannel(name=value.name, **values)
+            channel = WorklistChannel(name=value.name, is_internal=False, **values)
             db.add(channel)
             channels[value.name] = channel
             counters["created_channels"] += 1
@@ -377,6 +377,7 @@ def _import_configuration_v2(db: Session, payload) -> dict:
             validate_worklist_channel_identity_change(
                 db, channel.id, values["area_id"], values["modality_code"]
             )
+            channel.is_internal = False
             for key, field_value in values.items():
                 setattr(channel, key, field_value)
             counters["updated_channels"] += 1

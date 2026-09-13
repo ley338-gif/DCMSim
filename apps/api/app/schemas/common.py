@@ -153,10 +153,15 @@ def validate_worklist_filter_configuration(value):
         if value.modality_filter_fixed_value
         else None
     )
+    if value.station_ae_mode != "fixed":
+        station_value = None
+    if value.modality_filter_mode != "fixed":
+        modality_value = None
     if value.station_ae_mode == "fixed" and not station_value:
         raise ValueError("Fixed station AE mode needs a value")
     if value.modality_filter_mode == "fixed" and not modality_value:
         raise ValueError("Fixed modality filter mode needs a value")
+
     if modality_value and modality_value not in ModalityCode.__args__:
         raise ValueError("Fixed modality filter must be a supported modality code")
     value.station_ae_fixed_value = validate_ae(station_value) if station_value else None
@@ -181,6 +186,7 @@ class WorklistChannelCreate(NamedNodeBase):
 class WorklistChannelRead(WorklistChannelCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    is_internal: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -236,6 +242,50 @@ class ModalityProfileRead(ModalityProfileBase):
     updated_at: datetime
 
     _utc_timestamps = field_validator("created_at", "updated_at")(as_utc)
+
+
+class InlineModalityProfileCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    description: str | None = Field(default=None, max_length=500)
+    modality: ModalityCode
+    calling_ae: str
+    area_id: int | None = None
+    mwl_enabled: bool = True
+    mwl_endpoint_id: int | None = None
+    mwl_target_id: int | None = None
+    station_ae_mode: FilterMode = "profile"
+    station_ae_fixed_value: str | None = None
+    modality_filter_mode: FilterMode = "profile"
+    modality_filter_fixed_value: str | None = None
+    store_enabled: bool = True
+    store_endpoint_id: int | None = None
+    store_target_id: int | None = None
+
+    _calling = field_validator("calling_ae")(validate_ae)
+
+    @model_validator(mode="after")
+    def validate_services_and_filters(self):
+        if not self.mwl_enabled and not self.store_enabled:
+            raise ValueError("At least one DICOM service must be enabled")
+        for enabled, sources, service in (
+            (self.mwl_enabled, (self.mwl_endpoint_id, self.mwl_target_id), "worklist"),
+            (self.store_enabled, (self.store_endpoint_id, self.store_target_id), "store"),
+        ):
+            source_count = sum(source is not None for source in sources)
+            if enabled and source_count != 1:
+                raise ValueError(f"Enabled {service} service needs exactly one source")
+            if not enabled and source_count:
+                raise ValueError(f"Disabled {service} service cannot have a source")
+        validate_worklist_filter_configuration(self)
+        return self
+
+
+class InlineModalityProfileRead(ModalityProfileRead):
+    mwl_endpoint_id: int | None = None
+    station_ae_mode: FilterMode | None = None
+    station_ae_fixed_value: str | None = None
+    modality_filter_mode: FilterMode | None = None
+    modality_filter_fixed_value: str | None = None
 
 
 class ModalityProfileImport(BaseModel):
