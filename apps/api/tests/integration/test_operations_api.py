@@ -6,8 +6,9 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models import TestRun as RunModel
+from app.models import WorklistChannel
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 
@@ -249,6 +250,39 @@ def test_v2_import_normalizes_fixed_worklist_filters_like_crud(client):
     imported = test_client.get("/api/worklist-channels").json()[0]
     assert imported["station_ae_fixed_value"] == "CT-ROOM"
     assert imported["modality_filter_fixed_value"] == "CT"
+
+
+@pytest.mark.parametrize("mode", ["profile", "omit"])
+def test_v2_import_discards_historical_values_for_inactive_filter_modes(client, mode):
+    test_client, _, _ = client
+    payload = configuration_v2()
+    channel = payload["worklist_channels"][0]
+    channel.update(
+        station_ae_mode=mode,
+        station_ae_fixed_value=" OLD_ROOM ",
+        modality_filter_mode=mode,
+        modality_filter_fixed_value=" mr ",
+    )
+    response = test_client.post("/api/configuration/import", json=payload)
+    assert response.status_code == 200, response.text
+    imported = test_client.get("/api/worklist-channels").json()[0]
+    assert imported["station_ae_fixed_value"] is None
+    assert imported["modality_filter_fixed_value"] is None
+
+
+def test_v2_import_marks_an_updated_exported_channel_as_manually_owned(client):
+    test_client, factory, _ = client
+    payload = configuration_v2()
+    assert test_client.post("/api/configuration/import", json=payload).status_code == 200
+    with factory() as db:
+        channel = db.scalar(select(WorklistChannel).where(WorklistChannel.name == "Nord CT"))
+        channel.is_internal = True
+        db.commit()
+    response = test_client.post("/api/configuration/import", json=payload)
+    assert response.status_code == 200
+    with factory() as db:
+        channel = db.scalar(select(WorklistChannel).where(WorklistChannel.name == "Nord CT"))
+        assert channel.is_internal is False
 
 
 @pytest.mark.parametrize(("endpoint_index", "service"), [(0, "STORE"), (1, "QR")])

@@ -42,6 +42,10 @@ Ein Worklist-Kanal verbindet einen optionalen Bereich und einen Modalitätstyp m
 
 Ein strukturiertes Modalitätsprofil referenziert seinen Worklist-Kanal und seinen STORE-Endpoint. Das Calling AE bleibt am Profil, weil DCMSim den Test aus Sicht dieses Geräts ausführt. Legacy-Referenzen bleiben während der Übergangszeit als kompatibler Fallback erhalten.
 
+Der Worklist-Kanal ist ein internes Persistenz- und Kompatibilitätsmodell, kein eigener normaler UI-Arbeitsschritt. Das Modalitätsformular nimmt MWL-Endpoint und Filterregeln direkt entgegen. Die Orchestrierungs-API verwendet einen Kanal nur wieder, wenn Bereich, Modalität, Endpoint, beide Modi und beide festen Werte vollständig übereinstimmen; andernfalls erzeugt sie einen deterministisch benannten internen Kanal. Geteilte Kanäle werden nie für ein einzelnes Profil verändert oder umverdrahtet.
+
+Migration `0007` ergänzt eine explizite interne Verwaltungsmarkierung. Bestehende und über Format v2 manuell verwaltete Kanäle erhalten den sicheren Standard `false`. Automatische Bereinigung löscht ausschließlich mit `true` markierte, nicht mehr referenzierte Kanäle. Namen allein begründen niemals Eigentum oder Löschbarkeit.
+
 ### Explizite breite Diagnose
 
 Der normale Modalitätscheck sendet ausschließlich die im Kanal konfigurierten Matching Keys. Bei null Treffern erfolgt keine automatische breitere Abfrage.

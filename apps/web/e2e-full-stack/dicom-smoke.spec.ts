@@ -41,21 +41,14 @@ test('real modality check covers the complete structured 0.4 workflow and histor
   await page.getByRole('button',{name:'Speichern'}).click()
   await expect(page.getByText(/Full Stack Store · STORE/)).toBeVisible()
 
-  await page.getByRole('button',{name:'Kanal'}).click()
-  await page.getByLabel('Kanalname').fill('Full Stack CT Worklist')
-  await page.getByLabel('Modalität',{exact:true}).selectOption('CT')
-  await page.getByLabel('MWL-Endpoint').selectOption({label:'Full Stack DICOM · Full Stack MWL'})
-  await page.getByRole('button',{name:'Speichern'}).click()
-  await expect(page.getByText(/Full Stack CT Worklist · CT/)).toBeVisible()
-
   await page.goto('/modalities')
   await page.getByRole('button',{name:'Neue Modalität'}).click()
   await page.getByLabel('Name').fill('Full Stack CT')
   await page.getByLabel('Modalität',{exact:true}).selectOption('CT')
   await page.getByLabel('Calling AE').fill('DCMSIM')
   await page.getByLabel('Standort / Bereich').selectOption({label:'Full Stack Standort · Radiologie'})
-  await page.getByLabel('Worklist-Kanal').selectOption({label:'Full Stack CT Worklist · CT'})
-  await page.getByLabel('STORE-Endpoint').selectOption({label:'Full Stack Store · 127.0.0.1:11113'})
+  await page.getByLabel('MWL-Endpoint').selectOption({label:'Full Stack DICOM · Full Stack MWL · 127.0.0.1:11112 · Called AE TESTMWL'})
+  await page.getByLabel('STORE-Endpoint').selectOption({label:'Full Stack DICOM · Full Stack Store · 127.0.0.1:11113 · Called AE TESTPACS'})
   await page.getByRole('button',{name:'Speichern'}).click()
   await expect(page.getByRole('heading',{name:'Full Stack CT'})).toBeVisible()
 

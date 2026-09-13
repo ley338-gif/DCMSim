@@ -51,9 +51,10 @@ from app.schemas.common import (
     EchoRequest,
     Endpoint,
     HistoryRetentionRequest,
+    InlineModalityProfileCreate,
+    InlineModalityProfileRead,
     ModalityCheckRequest,
     ModalityProfileCreate,
-    ModalityProfileRead,
     SiteCreate,
     SiteRead,
     StoreRequest,
@@ -75,6 +76,11 @@ from app.services.history import (
     record_run,
 )
 from app.services.modality_checks import run_modality_check
+from app.services.modality_profiles import (
+    apply_inline_profile,
+    collect_internal_channel,
+    resolved_profile,
+)
 from app.services.operations import (
     create_sqlite_backup,
     export_configuration,
@@ -507,12 +513,15 @@ def _validate_profile_targets(payload: ModalityProfileCreate, db: Session) -> No
             raise HTTPException(422, "Selected target does not support store")
 
 
-@router.get("/modality-profiles", response_model=list[ModalityProfileRead])
+@router.get("/modality-profiles", response_model=list[InlineModalityProfileRead])
 def list_modality_profiles(db: Session = Depends(get_db)):
-    return db.scalars(select(ModalityProfile).order_by(ModalityProfile.name)).all()
+    return [
+        resolved_profile(item)
+        for item in db.scalars(select(ModalityProfile).order_by(ModalityProfile.name)).all()
+    ]
 
 
-@router.post("/modality-profiles", response_model=ModalityProfileRead, status_code=201)
+@router.post("/modality-profiles", response_model=InlineModalityProfileRead, status_code=201)
 def create_modality_profile(payload: ModalityProfileCreate, db: Session = Depends(get_db)):
     _validate_profile_targets(payload, db)
     profile = ModalityProfile(**payload.model_dump())
@@ -523,18 +532,36 @@ def create_modality_profile(payload: ModalityProfileCreate, db: Session = Depend
         db.rollback()
         raise HTTPException(409, "A modality profile with this name already exists") from exc
     db.refresh(profile)
-    return profile
+    return resolved_profile(profile)
 
 
-@router.get("/modality-profiles/{profile_id}", response_model=ModalityProfileRead)
+@router.post(
+    "/modality-profiles/inline",
+    response_model=InlineModalityProfileRead,
+    status_code=201,
+)
+def create_inline_modality_profile(
+    payload: InlineModalityProfileCreate, db: Session = Depends(get_db)
+):
+    try:
+        profile = apply_inline_profile(db, payload)
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "A modality profile with this name already exists") from exc
+    db.refresh(profile)
+    return resolved_profile(profile)
+
+
+@router.get("/modality-profiles/{profile_id}", response_model=InlineModalityProfileRead)
 def get_modality_profile(profile_id: int, db: Session = Depends(get_db)):
     profile = db.get(ModalityProfile, profile_id)
     if not profile:
         raise HTTPException(404, "Modality profile not found")
-    return profile
+    return resolved_profile(profile)
 
 
-@router.put("/modality-profiles/{profile_id}", response_model=ModalityProfileRead)
+@router.put("/modality-profiles/{profile_id}", response_model=InlineModalityProfileRead)
 def update_modality_profile(
     profile_id: int, payload: ModalityProfileCreate, db: Session = Depends(get_db)
 ):
@@ -542,15 +569,41 @@ def update_modality_profile(
     if not profile:
         raise HTTPException(404, "Modality profile not found")
     _validate_profile_targets(payload, db)
+    old_channel_id = profile.worklist_channel_id
     for key, value in payload.model_dump().items():
         setattr(profile, key, value)
     try:
+        db.flush()
+        if old_channel_id != profile.worklist_channel_id:
+            collect_internal_channel(db, old_channel_id)
         db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(409, "A modality profile with this name already exists") from exc
     db.refresh(profile)
-    return profile
+    return resolved_profile(profile)
+
+
+@router.put(
+    "/modality-profiles/{profile_id}/inline",
+    response_model=InlineModalityProfileRead,
+)
+def update_inline_modality_profile(
+    profile_id: int,
+    payload: InlineModalityProfileCreate,
+    db: Session = Depends(get_db),
+):
+    profile = db.get(ModalityProfile, profile_id)
+    if not profile:
+        raise HTTPException(404, "Modality profile not found")
+    try:
+        apply_inline_profile(db, payload, profile)
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "A modality profile with this name already exists") from exc
+    db.refresh(profile)
+    return resolved_profile(profile)
 
 
 @router.delete("/modality-profiles/{profile_id}", status_code=204)
@@ -558,7 +611,10 @@ def delete_modality_profile(profile_id: int, db: Session = Depends(get_db)):
     profile = db.get(ModalityProfile, profile_id)
     if not profile:
         raise HTTPException(404, "Modality profile not found")
+    old_channel_id = profile.worklist_channel_id
     db.delete(profile)
+    db.flush()
+    collect_internal_channel(db, old_channel_id)
     db.commit()
 
 

@@ -25,16 +25,16 @@ Docker zeigt den Container als gesund an, wenn Webdienst und lokale Datenbank an
 - **Storage SCU** (DCMSim) sendet per C-STORE an einen **Storage SCP** (PACS).
 - **Query/Retrieve SCU** sucht per Study Root C-FIND nach Studien. Es ruft keine Bilder ab.
 - Ein **DICOM-System** bezeichnet eine technische Gegenstelle wie RIS oder PACS. Ein **Endpoint** beschreibt genau einen Dienst mit Host, Port und Called AE.
-- Ein **Worklist-Kanal** verbindet einen organisatorischen Bereich mit genau einem MWL-Endpoint und legt fest, ob Station AE und Modalität aus dem Profil, als fester Wert oder gar nicht gesendet werden.
+- Ein intern verwalteter **Worklist-Kanal** speichert die direkte MWL-Zuordnung und Filterregeln eines Modalitätsprofils. Er bleibt für ältere API-/Exportdaten kompatibel, wird aber im normalen UI nicht separat gepflegt.
 - Die feste Zuordnung lautet organisatorisch **Standort → Bereich → Modalität** und technisch **DICOM-System → Endpoint**. Sie ist keine frei erweiterbare Registry-Hierarchie.
 - Eine **SOP Class** bezeichnet den DICOM-Objekttyp. Eine **Transfer Syntax** bestimmt seine Kodierung. Beide werden im **Presentation Context** ausgehandelt.
 - **Study UID**, **Series UID** und **SOP UID** identifizieren Untersuchung, Serie und einzelnes Objekt weltweit eindeutig.
 
-## 3. Systeme, Endpoints und Kanäle verwalten
+## 3. Systeme und Endpoints verwalten
 
-Unter **Systeme** werden links Standorte und Bereiche und rechts technische DICOM-Systeme mit ihren Endpoints verwaltet. Ein Endpoint hat genau einen Dienst (`MWL`, `STORE` oder `QR`), Host, Port und Called AE. Danach verbindet ein Worklist-Kanal einen Bereich mit einem MWL-Endpoint. Für Station AE und Modalitätsfilter stehen **Vom Profil**, **Fester Wert** und **Nicht senden** zur Auswahl. Modalitätsprofile wählen anschließend einen Bereich, einen Worklist-Kanal und einen STORE-Endpoint.
+Unter **Systeme** werden links Standorte und Bereiche und rechts technische DICOM-Systeme mit ihren Endpoints verwaltet. Ein Endpoint hat genau einen Dienst (`MWL`, `STORE` oder `QR`), Host, Port und Called AE. Die Seite enthält bewusst keine Worklist-Kanal-Pflege. Modalitätsprofile wählen anschließend MWL- und STORE-Endpoint direkt; die Worklist-Filter werden im selben Formular festgelegt.
 
-Gelöschte organisatorische Zuordnungen löschen keine Modalitätsprofile: betroffene Profile oder Kanäle erscheinen unter **Nicht zugeordnet** und müssen bewusst neu zugeordnet werden. Ein referenzierter MWL-Endpoint kann nicht gelöscht werden, solange ein Kanal ihn verwendet. Diese Regeln verhindern stilles Umverdrahten von DICOM-Tests.
+Gelöschte organisatorische Zuordnungen löschen keine Modalitätsprofile: betroffene Profile erscheinen unter **Nicht zugeordnet** und müssen bewusst neu zugeordnet werden. Ein verwendeter MWL-Endpoint kann nicht gelöscht werden. Diese Regeln verhindern stilles Umverdrahten von DICOM-Tests.
 
 Bestehende kombinierte Ziele bleiben nach einem Upgrade erhalten und erscheinen in manuellen Testformularen mit dem Zusatz **Legacy**. Migration `0006` erzeugt daraus DICOM-Systeme und je aktivem Dienst einen Endpoint. Bestehende Modalitätsprofile werden soweit möglich auf erzeugte Worklist-Kanäle und STORE-Endpoints abgebildet; ohne Standortinformation bleiben sie **Nicht zugeordnet**. Frühere Historieneinträge und ihre technischen Momentaufnahmen werden nicht umgedeutet.
 
@@ -72,13 +72,13 @@ Patientenname und Patient-ID aus der Datei erscheinen während des aktuellen Tes
 
 ## 10. Modalitätsprofile
 
-Unter **Modalitäten** bildet ein Profil die testrelevante Konfiguration eines Geräts ab. **Neue Modalität** öffnen, Name, Modalitätscode und Calling AE eintragen, Standort/Bereich wählen und einen passenden Worklist-Kanal sowie STORE-Endpoint zuordnen. Die Ansicht gruppiert Profile nach Standort und Bereich; fehlende oder gelöschte Bereiche erscheinen ausdrücklich unter **Nicht zugeordnet**.
+Unter **Modalitäten** bildet ein Profil die testrelevante Konfiguration eines Geräts ab. **Neue Modalität** öffnen, Name, Modalitätscode und Calling AE eintragen, optional Standort/Bereich wählen und MWL- und/oder STORE-Endpoint direkt zuordnen. Für Station AE und Modalitätsfilter stehen **Vom Geräteprofil**, **Fester Wert** und **Nicht senden** zur Auswahl; feste Werte sind nur im entsprechenden Modus erforderlich. Die Ansicht gruppiert Profile nach Standort und Bereich und nennt die direkten Ziele; fehlende oder gelöschte Bereiche erscheinen ausdrücklich unter **Nicht zugeordnet**.
 
-Unterstützt werden CT, MR, US, CR, DX, OT, XA, MG, NM und PT. Für einen kombinierten Check müssen Worklist-Kanal und STORE-Endpoint vorhanden sein. Die Struktur ist bewusst fest; DCMSim ersetzt kein vollständiges Anlagen- oder Organisationsregister.
+Unterstützt werden CT, MR, US, CR, DX, OT, XA, MG, NM und PT. MWL-only und STORE-only sind zulässig, beide Dienste dürfen aber nicht gleichzeitig deaktiviert sein. Bestehende Legacy-Profile bleiben sichtbar, prüfbar und in ihren Stammdaten bearbeitbar. Die Struktur ist bewusst fest; DCMSim ersetzt kein vollständiges Anlagen- oder Organisationsregister.
 
 ## 11. Modalität prüfen
 
-**Modalität prüfen** führt Worklist und Store nacheinander aus. Der Worklist-Kanal bestimmt, ob Modalität und Station AE aus dem Profil übernommen, fest gesetzt oder ausgelassen werden. Bei null Treffern erweitert DCMSim die Anfrage **nicht automatisch**. Erst **Breite Worklist-Diagnose starten** sendet ausdrücklich eine zweite Anfrage ohne Station-AE- und Modalitätsfilter; das heutige Datum bleibt als Datenminimierung erhalten. Die Trefferzahl ist eine technische Beobachtung, keine Aussage über eine fehlerhafte RIS-Konfiguration.
+**Modalität prüfen** führt die aktiven Dienste nacheinander aus. Die inline gespeicherten Worklist-Regeln bestimmen, ob Modalität und Station AE aus dem Profil übernommen, fest gesetzt oder ausgelassen werden. Bei null Treffern erweitert DCMSim die Anfrage **nicht automatisch**. Erst **Breite Worklist-Diagnose starten** sendet ausdrücklich eine zweite Anfrage ohne Station-AE- und Modalitätsfilter; das heutige Datum bleibt als Datenminimierung erhalten. Die Trefferzahl ist eine technische Beobachtung, keine Aussage über eine fehlerhafte RIS-Konfiguration.
 
 Der Store-Check erzeugt ein synthetisches Objekt. CT, MR, US, CR und DX verwenden die entsprechende Storage SOP Class; andere Profilmodalitäten verwenden sichtbar gekennzeichnet Secondary Capture. Standard ist Explicit VR Little Endian.
 
