@@ -64,6 +64,8 @@ Migration `0006` führt Standorte, Bereiche, Systeme, Endpoints und Worklist-Kan
 - Legacy-Ziele, IDs und historische Snapshots bleiben bestehen, damit ältere Testläufe und Integrationen nicht umgedeutet werden.
 - Der Konfigurationsexport verwendet Format 2. Der Import akzeptiert weiterhin Format 1 und normalisiert es in die neue Topologie. Importe bleiben nicht löschende Upserts und müssen vor der Ausführung bestätigt werden.
 
+ADR-0016 hebt den Export später auf Format 3 an und erhält den Import der Formate 1 und 2.
+
 ## Datenschutz- und Sicherheitsfolgen
 
 Die neue Topologie speichert technische Infrastrukturbezeichner und optionale organisatorische Namen, aber keine Patientenstammdaten. Standort- und Bereichsnamen dürfen keine patientenbezogenen Informationen enthalten. Die fehlende Cloud-Kommunikation und die datensparsame Historiengrenze bleiben unverändert. Die spätere Netzwerkbereitstellung regelt ADR-0016.

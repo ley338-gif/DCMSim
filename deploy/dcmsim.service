@@ -1,0 +1,22 @@
+[Unit]
+Description=DCMSim DICOM-Diagnosedienst
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dcmsim
+Group=dcmsim
+WorkingDirectory=/opt/dcmsim/current
+EnvironmentFile=/etc/dcmsim/dcmsim.env
+ExecStart=/opt/dcmsim/current/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8080 --no-proxy-headers
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/dcmsim
+
+[Install]
+WantedBy=multi-user.target

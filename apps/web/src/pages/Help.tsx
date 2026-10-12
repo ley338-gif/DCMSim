@@ -18,13 +18,13 @@ export function Help(){
    <SectionCard title="Status richtig verstehen">
     <div className="help-facts">
      <p><Server size={18}/><span><strong>Ein Ziel ist nicht dauerhaft „online“.</strong> Der Status zeigt nur den letzten zugeordneten Einzeltest. Nach einer Konfigurationsänderung ist ein neuer Test nötig.</span></p>
-     <p><Clock3 size={18}/><span><strong>Keine Hintergrundüberwachung.</strong> DCMSim startet Tests nur auf Anforderung; es gibt weder Scheduler noch automatische Benachrichtigungen.</span></p>
+     <p><Clock3 size={18}/><span><strong>Überwachung durch CheckMK.</strong> Der CheckMK-Agent startet kurze Endpoint-Prüfungen. Die Web-App hat keinen Scheduler und versendet keine Benachrichtigungen.</span></p>
      <p><BookOpen size={18}/><span><strong>Bei Fehlern zuerst die Details öffnen.</strong> Host, Port, AE-Titel, Statuscode und die empfohlene Diagnose mit der Gegenstelle abgleichen.</span></p>
     </div>
    </SectionCard>
   </div>
   <SectionCard title="Sicherer Betrieb und Grenzen">
-   <AlertBox tone="warning">DCMSim hat keine Benutzeranmeldung. Docker gibt die Anwendung standardmäßig nur auf diesem Rechner frei. Netzwerkzugriff nur bewusst und mit geeigneter Zugangssicherung einrichten.</AlertBox>
+   <AlertBox tone="warning">Für den Kliniknetzbetrieb authentifiziert ein Reverse Proxy die Benutzer. Ohne aktivierte Proxy-Anmeldung bleibt der lokale Entwicklungsmodus ohne Anmeldung. Docker gibt die Anwendung standardmäßig nur auf diesem Rechner frei.</AlertBox>
    <div className="help-facts">
     <p>Hochgeladene DICOM-Dateien können Patientendaten enthalten. Sie werden flüchtig verarbeitet; die Testhistorie speichert nur datensparsame technische Angaben.</p>
     <p>Unterstützt werden C-ECHO, Modality Worklist C-FIND, Study Root C-FIND auf Studienebene und C-STORE. C-MOVE, C-GET, Storage Commitment und ein produktiver Storage SCP sind nicht enthalten.</p>

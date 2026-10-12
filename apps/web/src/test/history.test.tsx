@@ -20,6 +20,9 @@ it('filters and paginates history through the server query',async()=>{
  await userEvent.selectOptions(screen.getByLabelText('Status'),'false')
  await waitFor(()=>expect(history).toHaveBeenCalledWith(expect.objectContaining({success:false,offset:0})))
 
+ await userEvent.type(screen.getByLabelText('Benutzer'),'alice')
+ await waitFor(()=>expect(history).toHaveBeenCalledWith(expect.objectContaining({username:'alice',offset:0})))
+
  await userEvent.click(screen.getByRole('button',{name:'Weiter'}))
  await waitFor(()=>expect(history).toHaveBeenCalledWith(expect.objectContaining({success:false,offset:50})))
 })

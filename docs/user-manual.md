@@ -6,13 +6,13 @@ DCMSim prüft aus Sicht einer Modalität, ob ein Worklist- oder PACS-Endpunkt er
 
 Die **Übersicht** führt direkt zu Worklist, PACS Store und PACS-Suche. Sie zeigt alle konfigurierten Dienste sowie die Verteilung und die letzten Ergebnisse von Worklist-, Store-, Query/Retrieve- und Modalitätsprüfungen.
 
-„Tests heute“ und Erfolgsquote beziehen sich auf den lokalen Kalendertag des Browsers; die Testverteilung zählt alle gespeicherten Läufe. Die Tabelle zeigt dagegen bewusst nur die jüngsten Tests. Die Kennzahlen sind keine automatische DICOM-Überwachung.
+„Tests heute“ und Erfolgsquote beziehen sich auf den lokalen Kalendertag des Browsers; die Testverteilung zählt alle gespeicherten Läufe. Die Tabelle zeigt dagegen bewusst nur die jüngsten manuellen Tests. Die automatische Endpoint-Überwachung läuft separat als CheckMK Local Check.
 
 Zeitpunkte in Übersicht und Historie werden aus eindeutig gekennzeichneten UTC-Zeitstempeln in die lokale Browserzeit umgerechnet. Die Datumsfilter für Worklist und PACS-Suche sind beim Öffnen mit dem lokalen heutigen Datum vorbelegt und können jederzeit geändert werden.
 
-Über **Hilfe** in der Kopfzeile öffnet sich der integrierte Schnellstart mit Erläuterungen zu Zielstatus, Fehlerdiagnose, Datenschutz und unterstützten DICOM-Diensten. **Test-Historie** führt direkt zu den bisherigen Testläufen. Der Hinweis **Ohne Anmeldung** ist wichtig: DCMSim besitzt im MVP keine Benutzerkonten und darf nur in einem vertrauenswürdigen internen Netz betrieben werden.
+Über **Hilfe** in der Kopfzeile öffnet sich der integrierte Schnellstart mit Erläuterungen zu Zielstatus, Fehlerdiagnose, Datenschutz und unterstützten DICOM-Diensten. **Test-Historie** führt direkt zu den bisherigen Testläufen. Bei aktivierter Proxy-Anmeldung zeigt die Kopfzeile den angemeldeten Benutzernamen. **Ohne Anmeldung** bezeichnet den lokalen Entwicklungsmodus.
 
-Beim Docker-Start ist Port 8080 standardmäßig nur auf `127.0.0.1` des Host-Rechners erreichbar. Ein Zugriff aus dem Netzwerk erfordert eine bewusste Anpassung von `DCMSIM_PUBLISH_HOST` und eine geeignete Zugangssicherung durch die Infrastruktur; DCMSim selbst bietet keine Anmeldung.
+Beim Docker-Start ist Port 8080 standardmäßig nur auf `127.0.0.1` des Host-Rechners erreichbar. Für den dauerhaften Kliniknetzbetrieb siehe [Ubuntu-Installation](install-ubuntu.md): nginx authentifiziert, DCMSim akzeptiert Identitätsheader nur von vertrauenswürdigen Proxy-Adressen.
 
 Diese Einschränkung betrifft nur eingehende Aufrufe der Oberfläche. DICOM-Tests verbinden sich weiterhin ausgehend mit den konfigurierten Zielen. Bei Docker bezeichnet `127.0.0.1` als DICOM-Ziel den DCMSim-Container selbst; für PACS/RIS auf dem Host oder im Netzwerk eine vom Container erreichbare Adresse verwenden.
 
@@ -94,7 +94,7 @@ Patienten- und Studiendaten werden nur in der aktuellen Antwort angezeigt. Sobal
 
 ## 13. Historie
 
-Die Historie zeigt Zeitpunkt, Typ, Ziel, Ergebnis und Dauer. Typ, Status und Freitext können gefiltert werden. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
+Die Historie zeigt Zeitpunkt, Typ, auslösenden Benutzer, Ziel, Ergebnis und Dauer. Typ, Status, Benutzer und Freitext können gefiltert werden. Ohne Anmeldung steht „lokal“; ältere Einträge behalten einen leeren Benutzerwert. Ein Eintrag öffnet Testparameter, Result Summary, technisches Log und die gespeicherten Request-/Response-Daten.
 
 Seit Version 0.3.7 speichert jeder neue Einzeltest die beim Test tatsächlich verwendeten technischen Zielangaben (Name, Host, Port und AE-Titel). Änderungen an einem gespeicherten Ziel verändern frühere Historieneinträge nicht. Bei älteren Einträgen ohne diese Momentaufnahme können technische Felder fehlen; fehlende Werte werden nicht aus der heutigen Zielkonfiguration rekonstruiert.
 
@@ -112,6 +112,10 @@ Aufklappbare Bereiche enthalten Filter, DICOM-Tags, UIDs, Status und Fehlerdetai
 
 ## 16. Einstellungen
 
-Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Retention und Darstellung verwalten. Das gespeicherte Default Calling AE wird bei neuen manuellen DICOM-Tests, Zielen und Modalitätsprofilen vorbelegt. Die kompakte Tabellenansicht wird nach dem Speichern sofort und bei späteren Aufrufen automatisch verwendet. Unter **DICOM** und **Logging** werden die tatsächlich wirksamen Server-Timeouts und das Log Level nur lesbar angezeigt. Diese Werte werden über `DCMSIM_CONNECT_TIMEOUT`, `DCMSIM_ASSOCIATION_TIMEOUT`, `DCMSIM_DIMSE_TIMEOUT` und `DCMSIM_LOG_LEVEL` in der Container-Umgebung gesetzt; Änderungen erfordern einen Neustart. Frühere wirkungslose Browser-Werte für diese Servereinstellungen werden ignoriert.
+Unter **Einstellungen** lassen sich lokale Benutzerstandards für Calling AE, Retention und Darstellung verwalten. Das gespeicherte Default Calling AE wird bei neuen manuellen DICOM-Tests, Zielen und Modalitätsprofilen vorbelegt. Die kompakte Tabellenansicht wird nach dem Speichern sofort und bei späteren Aufrufen automatisch verwendet. Unter **DICOM**, **Logging** und **Anmeldung** werden die tatsächlich wirksamen Server-Timeouts, das Log Level und die Proxy-Vertrauensgrenze nur lesbar angezeigt. Diese Werte werden über `DCMSIM_`-Umgebungsvariablen gesetzt; Änderungen erfordern einen Neustart. Frühere wirkungslose Browser-Werte für Servereinstellungen werden ignoriert.
 
-Unter **Datensicherung** kann die Konfiguration als JSON v2 exportiert und wieder importiert werden. Die Vorschau zählt Standorte, Bereiche, DICOM-Systeme, Worklist-Kanäle und Profile und nennt bestehende fachliche Schlüssel, die aktualisiert würden. Erst **Import bestätigen** führt namensbasierte Upserts aus; **Abbrechen** lässt die Konfiguration unverändert und nicht aufgeführte Einträge werden nie gelöscht. Legacy-Dateien im Format v1 bleiben importierbar und werden in die strukturierte Topologie normalisiert. Doppelte Namen innerhalb einer Konfigurationsgruppe werden abgewiesen. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.
+Unter **Datensicherung** kann die Konfiguration als JSON v3 einschließlich Monitor-Einstellungen exportiert und wieder importiert werden. Die Vorschau zählt Standorte, Bereiche, DICOM-Systeme, Worklist-Kanäle und Profile und nennt bestehende fachliche Schlüssel, die aktualisiert würden. Erst **Import bestätigen** führt namensbasierte Upserts aus; **Abbrechen** lässt die Konfiguration unverändert und nicht aufgeführte Einträge werden nie gelöscht. Legacy-Dateien im Format v1 und v2 bleiben importierbar; v2 überschreibt bestehende Monitor-Einstellungen nicht. Doppelte Namen innerhalb einer Konfigurationsgruppe werden abgewiesen. Das SQLite-Backup ist eine konsistente Kopie der gesamten lokalen Datenbank. Unter **Retention** werden Einträge älter als die gewählte Tageszahl nach Bestätigung manuell gelöscht.
+
+## 17. Endpoints überwachen
+
+Unter **Systeme** einen Endpoint bearbeiten und **Mit CheckMK überwachen** aktivieren. Das Monitor Calling AE ist die Identität des unabhängigen CheckMK-Tests. Bei MWL kann optional ein Arbeitszeitfenster `HH:MM-HH:MM` mit einer Mindestanzahl eingetragen werden. Innerhalb des Fensters ergibt eine kleinere Trefferzahl WARN; außerhalb ist eine leere Worklist OK. STORE und QR werden mit C-ECHO geprüft. CheckMK startet den Local Check; der Webdienst führt keine regelmäßigen Tests aus. Für eine Sammelprüfung nach Wartung siehe `dcmsim-check --all --report` in der [Ubuntu-Anleitung](install-ubuntu.md).

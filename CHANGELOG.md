@@ -6,17 +6,28 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 ### Added
 
+- Proxy-Anmeldung über vertrauenswürdige Reverse-Proxy-Adressen, Benutzerzuordnung in Historie und CSV sowie nur lesbare Anzeige der wirksamen Einstellungen.
+- CheckMK Local Check mit Endpoint-Auswahl, MWL C-FIND ohne Patientendaten-Ausgabe, C-ECHO für STORE/QR, Zeitfenster-Plausibilität und Sammelbericht.
+- Native Ubuntu-Anleitung mit systemd, nginx, TLS, Zugangssicherung, Migration und Backup.
 - Direkte Modalitätskonfiguration mit MWL-Endpoint, Station-AE-/Modalitätsfilter und STORE-Endpoint; die API orchestriert dafür interne Worklist-Kanäle.
 - Migration `0007` kennzeichnet intern verwaltete Worklist-Kanäle explizit.
+- Migration `0008` ergänzt Monitor-Konfiguration und optionalen Benutzer je Testlauf.
 
 ### Changed
 
+- Produktversion auf 0.5.0 angehoben. Konfigurationsexport v3 enthält die Monitor-Einstellungen; Importe von v1 und v2 bleiben möglich.
+- DCMSim übernimmt technische Überwachung und Proxy-Benutzerzuordnung; CheckMK bleibt für Zeitplan und Alarmierung zuständig.
 - **Systeme** verwaltet nur noch Standorte, Bereiche, DICOM-Systeme und Endpoints. Worklist-Kanäle bleiben ein kompatibles internes/API-Modell, sind aber kein eigener normaler UI-Arbeitsschritt mehr.
 - Die Modalitätsübersicht nennt direkte Worklist- und Store-Ziele statt Kanalnamen.
 
 ### Fixed
 
 - Interne Kanäle werden nur bei vollständiger semantischer Übereinstimmung wiederverwendet und nur unreferenziert bereinigt; manuell verwaltete oder geteilte Kanäle werden weder umverdrahtet noch automatisch gelöscht.
+
+### Security
+
+- Nicht vertrauenswürdige Identitätsheader werden ignoriert; bei verpflichtender Anmeldung werden Anfragen ohne gültige Proxy-Identität abgewiesen.
+- Monitor-Ausgabe enthält ausschließlich technischen Status, Anzahl, Dauer, stabilen Fehlercode und nächsten Prüfschritt.
 
 ## [0.4.0] - 2026-09-13
 

@@ -26,7 +26,7 @@ Lokale Test-SCPs werden in den DICOM-Integrationstests mit pynetdicom auf dynami
 
 Der Docker-CI-Job startet zusätzlich einen kurzlebigen Verification-SCP in einem getrennten Container auf einem privaten Testnetz. Der Anwendungscontainer sendet per API einen echten C-ECHO dorthin. Nur der HTTP-Testport wird an Host-Loopback veröffentlicht; der DICOM-Testport bleibt innerhalb des Docker-Netzes.
 
-`DCMSIM_LOG_LEVEL` steuert die DCMSim-Anwendungslogs. Die Bibliothekslogger von pydicom und pynetdicom bleiben aus Datenschutzgründen mindestens auf `WARNING`; ausführliche DICOM-Antworten werden kontrolliert im aktuellen Browser statt im Container-Log dargestellt.
+`DCMSIM_LOG_LEVEL` steuert die DCMSim-Anwendungslogs. Die Bibliothekslogger von pydicom und pynetdicom bleiben aus Datenschutzgründen mindestens auf `WARNING`; ausführliche DICOM-Antworten werden kontrolliert im aktuellen Browser statt im Container-Log dargestellt. Für den CheckMK Local Check kann lokal `python -m app.monitor --all --report` gestartet werden; er liest die SQLite-Datei nur lesend und benötigt keinen Webdienst.
 
 ## Release-Prozess
 

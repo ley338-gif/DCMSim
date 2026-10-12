@@ -1,8 +1,12 @@
 # DCMSim
 
-DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizintechnik-Administratoren. Es prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar und werden lokal protokolliert.
+DCMSim ist ein Diagnose- und Überwachungsdienst für PACS-, RIS- und Medizintechnik-Administratoren im Kliniknetz. Er prüft Modality Worklist, PACS-Studienabfragen, Storage und Connectivity per DICOM. Technische Antworten, ausgehandelte Parameter und Statuscodes bleiben sichtbar; manuelle Tests werden datensparsam protokolliert.
 
-## Funktionen in 0.4.0
+## Funktionen in 0.5.0
+
+- Proxy-Anmeldung mit vertrauenswürdigen Proxy-Adressen und Benutzerzuordnung in der Historie
+- CheckMK Local Check für überwachte MWL-, STORE- und QR-Endpoints, ohne Scheduler im Webdienst
+- nativer Ubuntu-Betrieb mit systemd, nginx und gebautem Frontend
 
 - MWL C-FIND mit gezielten Filtern oder Broad Query, Ergebnis-Dataset und Nulltreffer-Diagnose
 - C-STORE mit synthetischem Testbild oder flüchtig verarbeiteter `.dcm`-Datei
@@ -17,7 +21,7 @@ DCMSim ist ein vollständig lokales Diagnosewerkzeug für PACS-, RIS- und Medizi
 - synthetische, SOP-spezifische Testobjekte für SC, CT, MR, US, CR und DX
 - direkte Wiederholung und abbrechbare Browseranzeige für Modalitätschecks
 - konkrete nächste Schritte zu klassifizierten DICOM-Fehlern
-- JSON-Konfigurationsexport v2, Importvorschau, kompatibler v1-Import, konsistentes SQLite-Backup und manuelle History-Retention
+- JSON-Konfigurationsexport v3, Importvorschau, kompatibler v1/v2-Import, konsistentes SQLite-Backup und manuelle History-Retention
 - sichere PACS-Studienabfrage per Study Root C-FIND mit DICOM-Detailansicht
 - eigene Query/Retrieve-Konfiguration je Ziel; Patientenergebnisse werden nicht in der Historie gespeichert
 - vollständige Dashboard-Integration für PACS-Suche, Query/Retrieve-Ziele und Modalitätsprüfungen
@@ -55,7 +59,7 @@ DCMSim ist unter `http://localhost:8080` erreichbar. Docker bindet den Host-Port
 
 `/api/health` bestätigt, dass der Webdienst antwortet. `/api/ready` prüft zusätzlich die lokale Datenbank; Docker verwendet diese Bereitschaftsprüfung für seinen Containerstatus. Eine erfolgreiche Prüfung ist kein DICOM-Verbindungstest zu einem Ziel.
 
-Für bewusst abgesicherten Netzwerkzugriff kann `DCMSIM_PUBLISH_HOST` in einer lokalen `.env` auf eine private IP-Adresse des Host-Rechners gesetzt werden. Das ändert nur die Docker-Portfreigabe und fügt **keine Anmeldung** hinzu. Eine öffentliche Freigabe ohne vorgeschaltete Zugangssicherung ist nicht vorgesehen.
+Für bewusst abgesicherten Netzwerkzugriff kann `DCMSIM_PUBLISH_HOST` in einer lokalen `.env` auf eine private IP-Adresse des Host-Rechners gesetzt werden. Das ändert nur die Docker-Portfreigabe. Proxy-Anmeldung erfordert zusätzlich die `DCMSIM_PROXY_AUTH_*`-Einstellungen und einen authentifizierenden Reverse Proxy. Eine öffentliche Freigabe ohne vorgeschaltete Zugangssicherung ist nicht vorgesehen.
 
 Die Portbindung der Weboberfläche begrenzt keine ausgehenden DICOM-Verbindungen. Als DICOM-Ziel muss aus dem Container eine erreichbare Adresse eingetragen werden: `127.0.0.1` zeigt dort auf den Container selbst, nicht auf den Docker-Host oder ein anderes PACS.
 
@@ -80,6 +84,6 @@ Konfiguration erfolgt über die Variablen aus `.env.example`. Backend-Tests: `py
 
 Unterstützt werden C-ECHO SCU, MWL C-FIND SCU, Study Root C-FIND SCU und C-STORE SCU. Für strukturierte Profile zuerst unter **Systeme** Standorte/Bereiche sowie DICOM-Systeme/Endpoints anlegen und die gewünschten MWL-/STORE-Endpoints anschließend direkt unter **Modalitäten** auswählen. Bestehende Ziele bleiben nach dem Upgrade als **Legacy** verständlich und bearbeitbar. Details stehen in der [DICOM Support Matrix](docs/dicom-support.md). Bedienung: [User Manual](docs/user-manual.md). Fehleranalyse: [Troubleshooting](docs/troubleshooting.md).
 
-DCMSim bleibt ein leichtgewichtiges, lokales und nicht authentifiziertes Diagnosewerkzeug. Die feste Hierarchie dient der reproduzierbaren Auswahl für Tests, nicht als vollständiges Geräte- oder Organisationsregister. Mehrbenutzerbetrieb, Authentifizierung, Audit, Dokumente und frei modellierbare Beziehungen gehören zur Produktgrenze des Healthcare Node Registry (HNR), nicht zu DCMSim.
+Die [Ubuntu-Anleitung](docs/install-ubuntu.md) beschreibt den dauerhaften Kliniknetzbetrieb ohne Docker. nginx übernimmt TLS und Anmeldung; DCMSim ordnet manuelle Testläufe dem Proxy-Benutzer zu. CheckMK startet einen kurzlebigen Local Check und übernimmt Zeitplan und Alarmierung. DCMSim besitzt keinen eigenen Scheduler. Die feste Hierarchie dient der reproduzierbaren Auswahl für DICOM-Tests; Dokumente, frei modellierbare Beziehungen und organisationsweite Stammdaten bleiben beim Healthcare Node Registry (HNR).
 
-> DCMSim hat im MVP keine Authentifizierung und ist ausschließlich für vertrauenswürdige interne Netze gedacht. Uploads können Patientendaten enthalten und werden nicht dauerhaft gespeichert. Es gibt keine Telemetrie oder Cloud-Kommunikation.
+> Ohne aktivierte Proxy-Anmeldung bleibt der lokale Entwicklungsmodus ohne Anmeldung. Im Kliniknetz müssen nginx, TLS und `DCMSIM_PROXY_AUTH_REQUIRED=true` eingerichtet sein. Uploads können Patientendaten enthalten und werden nicht dauerhaft gespeichert. Es gibt keine Telemetrie oder Cloud-Kommunikation.

@@ -42,4 +42,4 @@ MWL unterstützt Datum, Modalität, Scheduled Station AE Title, Patient ID, Acce
 | DX | Digital X-Ray Image Storage for Presentation |
 | OT, XA, MG, NM, PT | Secondary Capture Image Storage (Fallback wird angezeigt) |
 
-Der manuelle Check unterstützt MWL und Store einzeln oder kombiniert. Er ist keine Überwachung und startet weder Scheduler noch Hintergrunddienst.
+Der manuelle Modalitätscheck unterstützt MWL und Store einzeln oder kombiniert. Die separate CheckMK-Überwachung prüft markierte MWL-Endpoints mit C-FIND und STORE-/QR-Endpoints mit C-ECHO. Sie zählt MWL-Einträge ohne Patientendaten auszugeben. Eine leere Worklist ist erfolgreich, sofern nicht innerhalb eines konfigurierten Arbeitszeitfensters die Mindestanzahl unterschritten wird (WARN). CheckMK startet die Prüfungen; der Webdienst hat weder Scheduler noch Hintergrunddienst. Ein automatischer C-STORE ins produktive PACS ist nicht enthalten.

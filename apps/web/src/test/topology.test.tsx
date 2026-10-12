@@ -59,3 +59,16 @@ it('shows a useful error state when topology cannot be loaded',async()=>{
  expect(await screen.findByText('Topologie konnte nicht geladen werden')).toBeVisible()
  expect(screen.getByText('API nicht erreichbar')).toBeVisible()
 })
+
+it('configures monitoring on an endpoint',async()=>{
+ const update=vi.spyOn(api,'updateDicomEndpoint').mockResolvedValue({...mwl,monitored:true,monitor_calling_ae:'DCMSIM',monitor_window:'07:00-18:00',monitor_min_count:1})
+ setup()
+ await userEvent.click(await screen.findByRole('button',{name:'RIS MWL bearbeiten'}))
+ const dialog=await screen.findByRole('dialog',{name:'Bearbeiten: Endpoint'})
+ await userEvent.click(within(dialog).getByLabelText('Mit CheckMK überwachen'))
+ await userEvent.type(within(dialog).getByLabelText('Arbeitszeitfenster'),'07:00-18:00')
+ await userEvent.clear(within(dialog).getByLabelText('Mindestanzahl Worklist-Einträge'))
+ await userEvent.type(within(dialog).getByLabelText('Mindestanzahl Worklist-Einträge'),'1')
+ await userEvent.click(within(dialog).getByRole('button',{name:'Speichern'}))
+ await waitFor(()=>expect(update).toHaveBeenCalledWith(mwl.id,expect.objectContaining({monitored:true,monitor_calling_ae:'DCMSIM',monitor_window:'07:00-18:00',monitor_min_count:1})))
+})

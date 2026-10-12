@@ -25,6 +25,7 @@ export function History(){
  const [type,setType]=useState('')
  const [status,setStatus]=useState('')
  const [search,setSearch]=useState('')
+ const [username,setUsername]=useState('')
  const [fromDate,setFromDate]=useState('')
  const [toDate,setToDate]=useState('')
  const deferredSearch=useDeferredValue(search)
@@ -33,8 +34,8 @@ export function History(){
  const [exportError,setExportError]=useState('')
  const limit=50
  const invalidRange=Boolean(fromDate&&toDate&&fromDate>toDate)
- const filters:HistoryFilters={test_type:type||undefined,success:status?status==='true':undefined,search:deferredSearch.trim()||undefined,started_from:fromDate?localDayStartIso(fromDate):undefined,started_before:toDate?localDayAfterIso(toDate):undefined,limit,offset}
- useEffect(()=>setOffset(0),[type,status,deferredSearch,fromDate,toDate])
+ const filters:HistoryFilters={test_type:type||undefined,success:status?status==='true':undefined,search:deferredSearch.trim()||undefined,username:username.trim()||undefined,started_from:fromDate?localDayStartIso(fromDate):undefined,started_before:toDate?localDayAfterIso(toDate):undefined,limit,offset}
+ useEffect(()=>setOffset(0),[type,status,deferredSearch,username,fromDate,toDate])
  const query=useQuery({queryKey:['history',filters],queryFn:()=>api.history(filters),enabled:!invalidRange})
  const exportCsv=async()=>{
   setExporting(true)
@@ -53,6 +54,7 @@ export function History(){
   {key:'time',header:'Zeit',render:r=>new Date(r.started_at).toLocaleString('de-DE')},
   {key:'type',header:'Typ',render:r=>label(r.test_type)},
   {key:'target',header:'Ziel / Profil',className:'mono',render:runTargetName},
+  {key:'username',header:'Benutzer',render:r=>r.username??'lokal'},
   {key:'status',header:'Status',render:r=><StatusBadge tone={r.success?'success':'error'}>{r.success?'Erfolgreich':'Fehler'}</StatusBadge>},
   {key:'duration',header:'Dauer',render:r=>`${r.duration_ms} ms`},
   {key:'result',header:'Ergebnis',render:r=>['mwl_find','qr_find'].includes(r.test_type)?`${r.result_json.count??0} Treffer`:r.status},
@@ -69,6 +71,7 @@ export function History(){
     <FormField label="Typ" htmlFor="history-type"><Select id="history-type" value={type} onChange={e=>setType(e.target.value)}><option value="">Alle Typen</option><option value="mwl_find">Worklist</option><option value="qr_find">PACS-Suche</option><option value="dicom_store">PACS Store</option><option value="modality_check">Modalitätsprüfung</option><option value="dicom_echo">C-ECHO</option></Select></FormField>
     <FormField label="Status" htmlFor="history-status"><Select id="history-status" value={status} onChange={e=>setStatus(e.target.value)}><option value="">Alle Status</option><option value="true">Erfolgreich</option><option value="false">Fehler</option></Select></FormField>
     <FormField label="Suche" htmlFor="history-search" className="span-two"><div className="input-with-icon"><Search size={16}/><TextInput id="history-search" value={search} placeholder="Host, Profil, AE Title oder Status" onChange={e=>setSearch(e.target.value)}/></div></FormField>
+    <FormField label="Benutzer" htmlFor="history-username"><TextInput id="history-username" value={username} placeholder="Benutzername" onChange={e=>setUsername(e.target.value)}/></FormField>
     <FormField label="Von" htmlFor="history-from"><DateInput id="history-from" value={fromDate} max={toDate||undefined} onChange={e=>setFromDate(e.target.value)}/></FormField>
     <FormField label="Bis" htmlFor="history-to"><DateInput id="history-to" value={toDate} min={fromDate||undefined} onChange={e=>setToDate(e.target.value)}/></FormField>
    </div>
@@ -90,7 +93,7 @@ export function HistoryDetail(){
  const header=<PageHeader title={`${label(run.test_type)} · Test #${run.id}`} subtitle={new Date(run.started_at).toLocaleString('de-DE')} breadcrumbs={['Test-Historie',`Test #${run.id}`]} actions={<Link to="/history"><Button variant="outline" icon={<ArrowLeft size={16}/>}>Zurück</Button></Link>}/>
  if(run.test_type==='modality_check'){
   const result={...(run.result_json as ModalityCheckResult),run_id:run.id}
-  return <>{header}<SectionCard title={result.profile_name}><ModalityCheckResultPanel result={result} showHistoryLink={false}/></SectionCard></>
+  return <>{header}<SectionCard title={result.profile_name}><p>Ausgelöst von: {run.username??'lokal'}</p><ModalityCheckResultPanel result={result} showHistoryLink={false}/></SectionCard></>
  }
- return <>{header}<div className="dashboard-grid"><SectionCard title="Testergebnis"><TestResultSummary result={run.result_json}/></SectionCard><SectionCard title="Testparameter"><KeyValueList items={[{label:'Testtyp',value:label(run.test_type)},{label:'Ziel',value:runTargetName(run)},{label:'Host',value:endpoint?.host??'Für ältere Tests nicht gespeichert',mono:true},{label:'Port',value:endpoint?.port,mono:true},{label:'Calling AE',value:endpoint?.calling_ae,mono:true},{label:'Called AE',value:endpoint?.called_ae,mono:true},{label:'Dauer',value:`${run.duration_ms} ms`}]} /></SectionCard></div><SectionCard title="Technisches Log"><DicomLogViewer result={run.result_json} context={{target:endpoint?`${endpoint.host}:${endpoint.port}`:undefined,calling:endpoint?.calling_ae,called:endpoint?.called_ae}}/><CollapsiblePanel title="Gespeicherte Request-/Response-Daten"><pre className="mono">{JSON.stringify(run.result_json,null,2)}</pre></CollapsiblePanel></SectionCard></>
+ return <>{header}<div className="dashboard-grid"><SectionCard title="Testergebnis"><TestResultSummary result={run.result_json}/></SectionCard><SectionCard title="Testparameter"><KeyValueList items={[{label:'Testtyp',value:label(run.test_type)},{label:'Benutzer',value:run.username??'lokal'},{label:'Ziel',value:runTargetName(run)},{label:'Host',value:endpoint?.host??'Für ältere Tests nicht gespeichert',mono:true},{label:'Port',value:endpoint?.port,mono:true},{label:'Calling AE',value:endpoint?.calling_ae,mono:true},{label:'Called AE',value:endpoint?.called_ae,mono:true},{label:'Dauer',value:`${run.duration_ms} ms`}]} /></SectionCard></div><SectionCard title="Technisches Log"><DicomLogViewer result={run.result_json} context={{target:endpoint?`${endpoint.host}:${endpoint.port}`:undefined,calling:endpoint?.calling_ae,called:endpoint?.called_ae}}/><CollapsiblePanel title="Gespeicherte Request-/Response-Daten"><pre className="mono">{JSON.stringify(run.result_json,null,2)}</pre></CollapsiblePanel></SectionCard></>
 }

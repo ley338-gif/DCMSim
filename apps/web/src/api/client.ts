@@ -6,15 +6,15 @@ export type WorklistEntry={patient_name:string;patient_id:string;birth_date:stri
 export type StudyEntry={patient_name:string;patient_id:string;accession_number:string;study_date:string;study_time:string;study_description:string;study_instance_uid:string;modalities:string;series_count:number;instance_count:number;dataset:DicomElement[]}
 export type Result={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:WorklistEntry[];active_filters?:Record<string,string>;[key:string]:unknown}
 export type StudyQueryResult={success:boolean;status?:string;code?:string;message?:string;recommendation?:string;duration_ms:number;steps?:string[];count?:number;entries?:StudyEntry[];active_filters?:Record<string,string>;run_id?:number}
-export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;target_snapshot_json?:Endpoint&{name?:string}|null;started_at:string;duration_ms:number;success:boolean;status:string;result_json:Result}
+export type Run={id:number;test_type:string;target_id:number|null;manual_target_json:Endpoint|null;target_snapshot_json?:Endpoint&{name?:string}|null;started_at:string;duration_ms:number;success:boolean;status:string;username?:string|null;result_json:Result}
 export type HistoryPage={items:Run[];total:number;limit:number;offset:number}
 export type DashboardSummary={today_total:number;today_success:number;by_type:Record<string,number>}
-export type HistoryFilters={test_type?:string;success?:boolean;search?:string;started_from?:string;started_before?:string;limit?:number;offset?:number}
+export type HistoryFilters={test_type?:string;success?:boolean;search?:string;username?:string;started_from?:string;started_before?:string;limit?:number;offset?:number}
 export type ModalityCode='CT'|'MR'|'US'|'CR'|'DX'|'OT'|'XA'|'MG'|'NM'|'PT'
 export type Site={id:number;name:string;created_at:string;updated_at:string}
 export type Area={id:number;site_id:number;name:string;created_at:string;updated_at:string}
 export type DicomSystem={id:number;name:string;created_at:string;updated_at:string}
-export type DicomEndpoint={id:number;system_id:number;name:string;service:'MWL'|'STORE'|'QR';host:string;port:number;called_ae:string;created_at:string;updated_at:string}
+export type DicomEndpoint={id:number;system_id:number;name:string;service:'MWL'|'STORE'|'QR';host:string;port:number;called_ae:string;monitored?:boolean;monitor_calling_ae?:string;monitor_window?:string|null;monitor_min_count?:number;created_at:string;updated_at:string}
 export type FilterMode='profile'|'fixed'|'omit'
 export type WorklistChannel={id:number;name:string;is_internal?:boolean;area_id:number|null;modality_code:ModalityCode;mwl_endpoint_id:number;station_ae_mode:FilterMode;station_ae_fixed_value:string|null;modality_filter_mode:FilterMode;modality_filter_fixed_value:string|null;created_at:string;updated_at:string}
 export type ModalityProfile={id:number;name:string;description:string|null;modality:ModalityCode;calling_ae:string;mwl_enabled:boolean;mwl_target_id:number|null;store_enabled:boolean;store_target_id:number|null;area_id:number|null;worklist_channel_id:number|null;store_endpoint_id:number|null;mwl_endpoint_id?:number|null;station_ae_mode?:FilterMode|null;station_ae_fixed_value?:string|null;modality_filter_mode?:FilterMode|null;modality_filter_fixed_value?:string|null;created_at:string;updated_at:string}
@@ -24,9 +24,10 @@ export type ModalityServiceResult=Result&{skipped?:boolean;association?:boolean;
 export type ModalityCheckResult=Result&{overall:'success'|'failure';profile_id:number;profile_name:string;modality:string;calling_ae:string;worklist:ModalityServiceResult;store:ModalityServiceResult;run_id:number}
 export type ConfigurationV1={format_version:1;exported_at?:string;targets:Array<Omit<Target,'id'|'created_at'|'updated_at'>>;modality_profiles:Array<{name:string;description:string|null;modality:ModalityCode;calling_ae:string;mwl_enabled:boolean;mwl_target_name:string|null;store_enabled:boolean;store_target_name:string|null}>}
 export type ConfigurationV2={format_version:2;exported_at?:string;sites:Array<{name:string}>;areas:Array<{name:string;site_name:string}>;dicom_systems:Array<{name:string;endpoints:Array<Omit<DicomEndpoint,'id'|'system_id'|'created_at'|'updated_at'>>}>;worklist_channels:Array<{name:string;site_name:string|null;area_name:string|null;modality_code:ModalityCode;mwl_system_name:string;mwl_endpoint_name:string;station_ae_mode:FilterMode;station_ae_fixed_value:string|null;modality_filter_mode:FilterMode;modality_filter_fixed_value:string|null}>;modality_profiles:Array<{name:string;description:string|null;modality:ModalityCode;calling_ae:string;site_name:string|null;area_name:string|null;worklist_channel_name:string|null;store_system_name:string|null;store_endpoint_name:string|null}>}
-export type ConfigurationExport=ConfigurationV1|ConfigurationV2
+export type ConfigurationV3=Omit<ConfigurationV2,'format_version'>&{format_version:3}
+export type ConfigurationExport=ConfigurationV1|ConfigurationV2|ConfigurationV3
 export type ImportSummary={created_targets?:number;updated_targets?:number;created_sites?:number;updated_sites?:number;created_areas?:number;updated_areas?:number;created_systems?:number;updated_systems?:number;created_endpoints?:number;updated_endpoints?:number;created_channels?:number;updated_channels?:number;created_profiles:number;updated_profiles:number}
-export type RuntimeSettings={connect_timeout:number;association_timeout:number;dimse_timeout:number;log_level:string}
+export type RuntimeSettings={connect_timeout:number;association_timeout:number;dimse_timeout:number;log_level:string;proxy_auth_enabled?:boolean;proxy_auth_required?:boolean;proxy_user_header?:string;trusted_proxies?:string}
 
 async function request<T>(path:string,init?:RequestInit):Promise<T>{const response=await fetch(`/api${path}`,{...init,headers:init?.body instanceof FormData?init.headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok){const body=await response.json().catch(()=>({detail:response.statusText}));throw new Error(typeof body.detail==='string'?body.detail:JSON.stringify(body.detail))}return response.status===204?undefined as T:response.json()}
 async function requestBlob(path:string):Promise<Blob>{const response=await fetch(`/api${path}`);if(!response.ok)throw new Error(response.statusText);return response.blob()}
@@ -80,4 +81,5 @@ export const api={
   purgeHistory:(days:number)=>request<{deleted_count:number;cutoff:string}>('/maintenance/history-retention',{method:'POST',body:JSON.stringify({days})}),
   databaseBackup:()=>requestBlob('/maintenance/database-backup'),
   runtimeSettings:()=>request<RuntimeSettings>('/settings/runtime'),
+  session:()=>request<{username:string|null}>('/session'),
 }
