@@ -15,3 +15,5 @@ Docker Compose bindet Port 8080 standardmäßig ausschließlich an `127.0.0.1` d
 - Der lokale Start unter `http://localhost:8080` bleibt unverändert.
 - Andere Geräte können die Standardinstallation nicht direkt erreichen.
 - Bestehende Netzwerkzugriffe brauchen eine explizite Konfigurationsanpassung oder einen abgesicherten Reverse Proxy beziehungsweise Tunnel.
+
+ADR-0016 legt für den dauerhaften Kliniknetzbetrieb einen authentifizierenden Reverse Proxy vor dem nur lokal erreichbaren Webdienst fest. Die Docker-Standardbindung bleibt bestehen.

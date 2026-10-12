@@ -66,15 +66,15 @@ Migration `0006` führt Standorte, Bereiche, Systeme, Endpoints und Worklist-Kan
 
 ## Datenschutz- und Sicherheitsfolgen
 
-Die neue Topologie speichert technische Infrastrukturbezeichner und optionale organisatorische Namen, aber keine Patientenstammdaten. Standort- und Bereichsnamen dürfen keine patientenbezogenen Informationen enthalten. Die vorhandene lokale Bereitstellung, die fehlende Cloud-Kommunikation und die datensparsame Historiengrenze bleiben unverändert.
+Die neue Topologie speichert technische Infrastrukturbezeichner und optionale organisatorische Namen, aber keine Patientenstammdaten. Standort- und Bereichsnamen dürfen keine patientenbezogenen Informationen enthalten. Die fehlende Cloud-Kommunikation und die datensparsame Historiengrenze bleiben unverändert. Die spätere Netzwerkbereitstellung regelt ADR-0016.
 
 Das explizite Auslösen breiter Worklist-Abfragen reduziert unbeabsichtigte Offenlegung gegenüber einer automatischen Diagnose. Es ersetzt keine Berechtigungsprüfung des KIS/RIS und keine Netzsegmentierung.
 
 ## Produktgrenze zu Healthcare Node Registry
 
-Die feste Hierarchie dient ausschließlich der reproduzierbaren Auswahl und Diagnose von DICOM-Verbindungen. DCMSim bleibt ein leichtgewichtiges, lokales und nicht authentifiziertes Diagnosewerkzeug.
+Die feste Hierarchie dient ausschließlich der reproduzierbaren Auswahl und Diagnose von DICOM-Verbindungen. ADR-0016 erweitert DCMSim um Proxy-Anmeldung und Endpoint-Überwachung.
 
-Frei modellierbare Organisationsebenen und Beziehungen, Mehrbenutzerbetrieb, Rollen, Audit, Dokumente, Verantwortliche, umfassende Systemstammdaten oder kontinuierliche Überwachung gehören weiterhin zum Healthcare Node Registry (HNR) oder benötigen eine ausdrücklich entworfene Integration. Diese Funktionen werden nicht schrittweise und unbemerkt in DCMSim nachgebaut.
+Frei modellierbare Organisationsebenen und Beziehungen, Rollen, Dokumente, Verantwortliche und umfassende Systemstammdaten bleiben beim Healthcare Node Registry (HNR). Die in ADR-0016 beschlossene Benutzerzuordnung und technische Überwachung liegen bei DCMSim.
 
 ## Konsequenzen
 

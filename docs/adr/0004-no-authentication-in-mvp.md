@@ -1,6 +1,6 @@
 # ADR-0004: No authentication in MVP
 
-**Status:** Accepted
+**Status:** Ersetzt durch [ADR-0016](0016-dcmsim-als-netzwerkdienst.md)
 
 **Context:** Der MVP läuft als lokales internes Einzelwerkzeug.
 

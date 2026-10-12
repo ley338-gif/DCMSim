@@ -15,3 +15,5 @@ Konfigurationen werden als versioniertes JSON exportiert und namensbasiert impor
 ## Konsequenzen
 
 Alle Funktionen bleiben lokal und ohne Hintergrunddienst reproduzierbar. Ein Import kann bestehende gleichnamige Konfigurationen aktualisieren; dies wird in der Oberfläche transparent beschrieben.
+
+ADR-0016 ergänzt einen separat von CheckMK gestarteten, kurzlebigen Local Check. Die Web-App erhält weiterhin keinen Scheduler oder Hintergrunddienst.
