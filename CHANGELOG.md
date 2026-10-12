@@ -28,6 +28,7 @@ Alle relevanten Änderungen werden nach [Keep a Changelog](https://keepachangelo
 
 - Nicht vertrauenswürdige Identitätsheader werden ignoriert; bei verpflichtender Anmeldung werden Anfragen ohne gültige Proxy-Identität abgewiesen.
 - Monitor-Ausgabe enthält ausschließlich technischen Status, Anzahl, Dauer, stabilen Fehlercode und nächsten Prüfschritt.
+- Frontend-Lockfile aktualisiert `brace-expansion` und `source-map-js` auf korrigierte Versionen; `npm audit --audit-level=moderate` meldet keine Schwachstellen.
 
 ## [0.4.0] - 2026-09-13
 
