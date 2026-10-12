@@ -76,7 +76,7 @@ def test_configuration_import_is_non_destructive_upsert_and_exports_names(client
     assert second.json()["updated_profiles"] == 1
 
     exported = test_client.get("/api/configuration/export").json()
-    assert exported["format_version"] == 2
+    assert exported["format_version"] == 3
     assert exported["dicom_systems"][0]["name"] == "JiveX"
     assert {endpoint["host"] for endpoint in exported["dicom_systems"][0]["endpoints"]} == {
         "pacs.local"
@@ -355,3 +355,4 @@ def test_database_backup_is_a_readable_sqlite_copy(client, tmp_path):
     backup_path.write_bytes(response.content)
     with sqlite3.connect(backup_path) as connection:
         assert connection.execute("select count(*) from targets").fetchone()[0] == 1
+

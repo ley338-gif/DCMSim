@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     dimse_timeout: float = 20
     max_upload_bytes: int = 50 * 1024 * 1024
     log_level: str = "INFO"
+    proxy_auth_enabled: bool = False
+    proxy_auth_required: bool = False
+    proxy_user_header: str = "X-Forwarded-User"
+    trusted_proxies: str = "127.0.0.1"
+    static_path: str | None = None
 
     def ensure_data_directory(self) -> None:
         if self.database_url.startswith("sqlite:///"):

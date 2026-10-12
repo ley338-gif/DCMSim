@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dcmsim"
-version = "0.4.0"
+version = "0.5.0"
 description = "Local DICOM troubleshooting tool"
 requires-python = ">=3.12"
 dependencies = [
@@ -26,6 +26,9 @@ dev = [
   "pytest-cov>=5,<7",
   "ruff>=0.6,<1",
 ]
+
+[project.scripts]
+dcmsim-check = "app.monitor:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["apps/api/app"]

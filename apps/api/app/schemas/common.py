@@ -130,9 +130,26 @@ class DicomEndpointCreate(NamedNodeBase):
     host: str
     port: int = Field(ge=1, le=65535)
     called_ae: str
+    monitored: bool = False
+    monitor_calling_ae: str = "DCMSIM"
+    monitor_window: str | None = None
+    monitor_min_count: int = Field(default=0, ge=0)
 
     _host = field_validator("host")(validate_host)
     _called = field_validator("called_ae")(validate_ae)
+    _monitor_calling = field_validator("monitor_calling_ae")(validate_ae)
+
+    @field_validator("monitor_window")
+    @classmethod
+    def valid_monitor_window(cls, value: str | None) -> str | None:
+        if value is None or value == "":
+            return None
+        if not re.fullmatch(r"\d{2}:\d{2}-\d{2}:\d{2}", value):
+            raise ValueError("Arbeitszeitfenster muss HH:MM-HH:MM sein")
+        start, end = value.split("-")
+        if any(int(part[:2]) > 23 or int(part[3:]) > 59 for part in (start, end)) or start == end:
+            raise ValueError("Ungültiges Arbeitszeitfenster")
+        return value
 
 
 class DicomEndpointRead(DicomEndpointCreate):
@@ -403,7 +420,11 @@ class ConfigurationImportV2(BaseModel):
         return self
 
 
-ConfigurationImport = ConfigurationImportV1 | ConfigurationImportV2
+class ConfigurationImportV3(ConfigurationImportV2):
+    format_version: Literal[3]
+
+
+ConfigurationImport = ConfigurationImportV1 | ConfigurationImportV2 | ConfigurationImportV3
 
 
 class HistoryRetentionRequest(BaseModel):
@@ -471,6 +492,7 @@ class TestRunRead(BaseModel):
     duration_ms: int
     success: bool
     status: str
+    username: str | None
     result_json: dict[str, Any]
 
     _utc_timestamp = field_validator("started_at")(as_utc)

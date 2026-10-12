@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import String, case, cast, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.proxy_auth import current_username
 from app.models import Target, TestRun
 
 logger = logging.getLogger("dcmsim.tests")
@@ -18,12 +19,15 @@ def history_filters(
     search: str | None = None,
     started_from: datetime | None = None,
     started_before: datetime | None = None,
+    username: str | None = None,
 ) -> list[Any]:
     filters: list[Any] = []
     if test_type:
         filters.append(TestRun.test_type == test_type)
     if success is not None:
         filters.append(TestRun.success == success)
+    if username:
+        filters.append(TestRun.username == username)
     if started_from is not None:
         filters.append(TestRun.started_at >= started_from.astimezone(UTC))
     if started_before is not None:
@@ -51,10 +55,11 @@ def query_history(
     search: str | None = None,
     started_from: datetime | None = None,
     started_before: datetime | None = None,
+    username: str | None = None,
     limit: int | None = 50,
     offset: int = 0,
 ) -> tuple[Sequence[TestRun], int]:
-    filters = history_filters(test_type, success, search, started_from, started_before)
+    filters = history_filters(test_type, success, search, started_from, started_before, username)
     base = select(TestRun).outerjoin(Target).where(*filters)
     total = db.scalar(
         select(func.count()).select_from(TestRun).outerjoin(Target).where(*filters)
@@ -181,6 +186,7 @@ def record_run(
         duration_ms=result.get("duration_ms", 0),
         success=result.get("success", False),
         status=result.get("status") or result.get("code", "UNKNOWN"),
+        username=current_username(),
         result_json=sanitize_history_result(test_type, result),
     )
     db.add(run)

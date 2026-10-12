@@ -74,19 +74,21 @@ def echo(endpoint: dict[str, Any]) -> dict[str, Any]:
         assoc.release()
 
 
-def find_worklist(endpoint: dict[str, Any], query: Dataset) -> dict[str, Any]:
+def find_worklist(endpoint: dict[str, Any], query: Dataset, *, count_only: bool = False) -> dict[str, Any]:
     started = monotonic()
     ae = _ae(endpoint["calling_ae"])
     ae.add_requested_context(ModalityWorklistInformationFind)
     assoc = ae.associate(endpoint["host"], endpoint["port"], ae_title=endpoint["called_ae"])
     if not assoc.is_established:
         _association_error(assoc, endpoint["called_ae"])
-    rows, final_code = [], None
+    rows, final_code, count = [], None, 0
     try:
         for status, identifier in assoc.send_c_find(query, ModalityWorklistInformationFind):
             code = getattr(status, "Status", None) if status else None
             if code in (0xFF00, 0xFF01) and identifier is not None:
-                rows.append(parse_worklist_result(identifier))
+                count += 1
+                if not count_only:
+                    rows.append(parse_worklist_result(identifier))
             else:
                 final_code = code
         if final_code is None:
@@ -99,8 +101,8 @@ def find_worklist(endpoint: dict[str, Any], query: Dataset) -> dict[str, Any]:
         return {
             "success": True,
             "status": status_hex(final_code),
-            "count": len(rows),
-            "entries": rows,
+            "count": count,
+            **({} if count_only else {"entries": rows}),
             "duration_ms": round((monotonic() - started) * 1000),
             "steps": ["TCP reachable", "Association accepted", "C-FIND completed successfully"],
         }

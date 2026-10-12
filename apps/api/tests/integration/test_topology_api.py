@@ -169,7 +169,7 @@ def test_configuration_export_v2_contains_normalized_topology(client):
     )
 
     exported = client.get("/api/configuration/export").json()
-    assert exported["format_version"] == 2
+    assert exported["format_version"] == 3
     assert exported["sites"] == [{"name": "Nord"}]
     assert exported["areas"] == [{"name": "Radiologie", "site_name": "Nord"}]
     assert exported["dicom_systems"][0]["endpoints"][0]["service"] == "MWL"
@@ -301,3 +301,4 @@ def test_referenced_channel_allows_consistent_non_identity_update(client):
 
     assert response.status_code == 200
     assert response.json()["name"] == "Renamed CT"
+

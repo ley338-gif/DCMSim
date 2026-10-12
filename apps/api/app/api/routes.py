@@ -18,6 +18,7 @@ from starlette.background import BackgroundTask
 from app.core.config import settings
 from app.core.dates import as_utc
 from app.core.logging import effective_log_level
+from app.core.proxy_auth import current_username
 from app.db.session import get_db
 from app.dicom.datasets import (
     SOP_LABELS,
@@ -113,7 +114,7 @@ def error_result(exc: DicomError, started: float) -> dict:
 
 @router.get("/health")
 def health():
-    return {"status": "ok", "version": "0.3.22"}
+    return {"status": "ok", "version": "0.5.0"}
 
 
 @router.get("/ready")
@@ -122,7 +123,12 @@ def ready(db: Session = Depends(get_db)):
         db.execute(select(1))
     except SQLAlchemyError as exc:
         raise HTTPException(503, "Database unavailable") from exc
-    return {"status": "ready", "version": "0.3.22"}
+    return {"status": "ready", "version": "0.5.0"}
+
+
+@router.get("/session")
+def session_identity():
+    return {"username": current_username()}
 
 
 @router.get("/settings/runtime")
@@ -133,6 +139,10 @@ def runtime_settings():
         "association_timeout": settings.association_timeout,
         "dimse_timeout": settings.dimse_timeout,
         "log_level": logging.getLevelName(effective_log_level(settings.log_level)),
+        "proxy_auth_enabled": settings.proxy_auth_enabled or settings.proxy_auth_required,
+        "proxy_auth_required": settings.proxy_auth_required,
+        "proxy_user_header": settings.proxy_user_header,
+        "trusted_proxies": settings.trusted_proxies,
     }
 
 
@@ -778,6 +788,7 @@ def search_runs(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    username: str | None = None,
     started_from: datetime | None = None,
     started_before: datetime | None = None,
     limit: int = 50,
@@ -792,6 +803,7 @@ def search_runs(
         test_type=test_type,
         success=success,
         search=search,
+        username=username,
         started_from=started_from,
         started_before=started_before,
         limit=limit,
@@ -818,6 +830,7 @@ def export_runs_csv(
     test_type: str | None = None,
     success: bool | None = None,
     search: str | None = None,
+    username: str | None = None,
     started_from: datetime | None = None,
     started_before: datetime | None = None,
     db: Session = Depends(get_db),
@@ -828,6 +841,7 @@ def export_runs_csv(
         test_type=test_type,
         success=success,
         search=search,
+        username=username,
         started_from=started_from,
         started_before=started_before,
         limit=None,
@@ -838,6 +852,7 @@ def export_runs_csv(
         [
             "Zeitpunkt",
             "Testtyp",
+            "Benutzer",
             "Ziel oder Profil",
             "Host",
             "Calling AE",
@@ -856,6 +871,7 @@ def export_runs_csv(
             [
                 as_utc(run.started_at).isoformat(),
                 run.test_type,
+                csv_cell(run.username or "lokal"),
                 csv_cell(profile_name or target_name),
                 csv_cell(endpoint.get("host", "")),
                 csv_cell(endpoint.get("calling_ae", "")),

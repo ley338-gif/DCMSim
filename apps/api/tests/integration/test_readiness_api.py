@@ -19,7 +19,7 @@ def test_readiness_checks_database(tmp_path):
         with TestClient(app) as client:
             response = client.get("/api/ready")
             assert response.status_code == 200
-            assert response.json() == {"status": "ready", "version": "0.3.22"}
+            assert response.json() == {"status": "ready", "version": "0.5.0"}
     finally:
         app.dependency_overrides.clear()
         engine.dispose()
@@ -39,3 +39,4 @@ def test_readiness_fails_without_database_but_liveness_stays_ok():
             assert response.json() == {"detail": "Database unavailable"}
     finally:
         app.dependency_overrides.clear()
+

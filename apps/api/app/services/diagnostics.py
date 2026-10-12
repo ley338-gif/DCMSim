@@ -5,6 +5,7 @@ RECOMMENDATIONS = {
     "DICOM_TIMEOUT": "Timeouts und Auslastung der Gegenstelle prüfen und den Test wiederholen.",
     "DICOM_NO_PRESENTATION_CONTEXT": "SOP Class und Transfer Syntax mit der PACS-Freigabe abgleichen.",
     "DICOM_C_FIND_FAILED": "C-FIND-Status, Query/Retrieve-Level und Berechtigung im RIS/PACS prüfen.",
+    "DICOM_C_ECHO_FAILED": "C-ECHO-Status und Freigabe des Verification-Dienstes prüfen.",
     "DICOM_STORE_WARNING": "Das Objekt wurde angenommen; Warnstatus im PACS-Log nachschlagen.",
     "DICOM_STORE_FAILED": "C-STORE-Status, Speicherregeln und PACS-Importlog prüfen.",
     "MODALITY_TARGET_MISSING": "Profil bearbeiten und für jeden aktiven Dienst ein Ziel auswählen.",

@@ -94,6 +94,10 @@ class DicomEndpoint(Base):
     host: Mapped[str] = mapped_column(String(255))
     port: Mapped[int] = mapped_column(Integer)
     called_ae: Mapped[str] = mapped_column(String(16))
+    monitored: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    monitor_calling_ae: Mapped[str] = mapped_column(String(16), default="DCMSIM", server_default="DCMSIM")
+    monitor_window: Mapped[str | None] = mapped_column(String(11))
+    monitor_min_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -196,5 +200,6 @@ class TestRun(Base):
     duration_ms: Mapped[int] = mapped_column(Integer)
     success: Mapped[bool] = mapped_column(Boolean)
     status: Mapped[str] = mapped_column(String(64))
+    username: Mapped[str | None] = mapped_column(String(128), index=True)
     result_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     target: Mapped[Target | None] = relationship(back_populates="runs")

@@ -19,6 +19,10 @@ def test_runtime_settings_show_effective_values_without_sensitive_configuration(
         "association_timeout": 12,
         "dimse_timeout": 30,
         "log_level": "WARNING",
+        "proxy_auth_enabled": False,
+        "proxy_auth_required": False,
+        "proxy_user_header": "X-Forwarded-User",
+        "trusted_proxies": "127.0.0.1",
     }
     assert "patients.db" not in response.text
 

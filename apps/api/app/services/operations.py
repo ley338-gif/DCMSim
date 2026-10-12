@@ -39,7 +39,7 @@ def export_configuration(db: Session) -> dict:
     system_names = {item.id: item.name for item in systems}
     channel_names = {item.id: item.name for item in channels}
     return {
-        "format_version": 2,
+        "format_version": 3,
         "exported_at": datetime.now(UTC).isoformat(),
         "sites": [{"name": item.name} for item in sites],
         "areas": [
@@ -55,6 +55,10 @@ def export_configuration(db: Session) -> dict:
                         "host": endpoint.host,
                         "port": endpoint.port,
                         "called_ae": endpoint.called_ae,
+                        "monitored": endpoint.monitored,
+                        "monitor_calling_ae": endpoint.monitor_calling_ae,
+                        "monitor_window": endpoint.monitor_window,
+                        "monitor_min_count": endpoint.monitor_min_count,
                     }
                     for endpoint in endpoints
                     if endpoint.system_id == system.id
@@ -219,7 +223,7 @@ def _normalize_v1_import(db: Session, payload, targets: dict[str, Target]) -> No
 
 
 def import_configuration(db: Session, payload: ConfigurationImport) -> dict:
-    if payload.format_version == 2:
+    if payload.format_version in (2, 3):
         return _import_configuration_v2(db, payload)
     target_by_name = {target.name: target for target in db.scalars(select(Target)).all()}
     created_targets = updated_targets = 0
@@ -334,6 +338,8 @@ def _import_configuration_v2(db: Session, payload) -> dict:
         for endpoint_value in value.endpoints:
             endpoint = existing.get(endpoint_value.name)
             values = endpoint_value.model_dump()
+            if payload.format_version == 2:
+                values = {key: values[key] for key in ("name", "service", "host", "port", "called_ae")}
             if endpoint is None:
                 endpoint = DicomEndpoint(system_id=system.id, **values)
                 db.add(endpoint)
